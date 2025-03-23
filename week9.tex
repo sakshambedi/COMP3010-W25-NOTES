@@ -1,0 +1,258 @@
+\section{Week 9 : Consensus \& Blockchain}
+\subsection{Byzantine Failures}
+Byzantine failures relate to problems with distributed systems where nodes (or people) are dispersed and communication is unreliable. It stems from the Byzantine Empire era, specifically illustrating armies coordinating an attack. The attack is successful only if all armies agree on when to attack. The agreement is a binary choice: \textit{YES} or \textit{NO}.
+
+\subsection{Consensus}
+
+Consensus is the process of getting everyone on the same idea. The main challenge is that the nodes are everywhere, and have trouble communicating because of the communication medium. The idea of the nodes, and consensus, can be applied, and related, to a distributed system, and getting all of the people to agree on one idea. The problem is that these nodes can be anywhere and can have trouble communicating through the communication medium.
+
+\subsection{The Byzantine Generals Problem}
+The Byzantine Generals Problem conceptualizes this, referring to armies communicating an attack in tandem. It’s not a new problem, dating back to approximately 600 AD.
+
+The main problem is that the armies must coordinate and attack will only be successful if all of the armies agree to attack at the time that they agree on, and will lose, if only a fraction of the army attacks. There is also the possibility that not everyone is being honest, so there is the potential for somebody to act unreliably.
+
+\subsection{Byzantine Fault Tolerance}
+It is about achieving consensus even with unreliable actors, with examples in:
+
+\begin{enumerate}[noitemsep, topsep=1pt] 
+\item Cryptocurrencies like Bitcoin
+\item Aircraft systems with sensors
+\end{enumerate}
+
+\begin{example}{Bitcoin Example}
+Bitcoin uses an open ledger system, and transactions are sent to be permanent, and it has to reach consensus as to whether the transactions occurred or not.
+
+\texttt{Person A} wants to send Bitcoin to \texttt{Person B}.
+Workers in the network need to agree on the validity of the transaction.
+The challenge is dealing with potential bad actors or unreliable messages.	
+\end{example}
+
+\begin{example}{Aircraft Example}
+Aircraft have multiple sensors that need to agree on actions:
+
+\begin{enumerate}[noitemsep, topsep=1pt]
+\item Sensors detect a situation and suggest a response.
+\item Sensors can be faulty, leading to incorrect inputs.
+\item A minority report situation arises when sensors disagree.
+\end{enumerate}	
+\end{example}
+
+The problem can be summarized as needing:
+\begin{enumerate}[noitemsep, topsep=1pt]
+\item Agreement among all loyal nodes.
+\item A small number of traitors cannot force a bad plan.
+\end{enumerate}
+
+\subsubsection{Oral Message Algorithm (OM)}
+The Oral Message (OM) algorithm is a recursive method for achieving consensus in the presence of traitorous generals. It is defined as follows:
+
+\begin{itemize}[itemsep=1pt, topsep=2pt]
+    \item $\mathbf{OM(m)}$: An oral message algorithm where $ m $ represents the maximum number of traitors.
+    \item \textbf{Base Case:} 
+    \begin{itemize}[noitemsep, topsep=1pt]
+        \item $\mathbf{OM(0)}$: If there are no traitors ($m = 0$), all generals simply follow the commander's order, ensuring consensus.
+    \end{itemize}
+    \item \textbf{Recursive Case:} 
+    \begin{itemize}[noitemsep, topsep=1pt]
+        \item Each general takes on the role of the commander and sends an order to the remaining $ n - 1 $ generals.
+        \item Each recipient then recursively applies $OM(m-1)$.
+        \item After receiving orders from all possible commanders, each general determines the final decision based on the majority value.
+    \end{itemize}
+\end{itemize}
+
+\begin{example}{Byzantine Generals with 3 Generals}
+\begin{minipage}{0.75\textwidth} % Left side (text)
+The commander sends an \texttt{attack} message to two generals: General A and General B. General B is a traitor and sends conflicting information. \\ 
+
+With $N=3$, and $3 \geq 3M+1$ or the equivalent $2/3 \geq M$. Since the number of traitors $M$ must be an integer there is NO solution.
+\end{minipage}
+\hfill
+\begin{minipage}{0.2\textwidth} % righ side (text)
+\begin{center}
+\begin{tabular}{|c|c|c|}
+    \hline
+    G & 1 & 2 \\ \hline
+    ~ & a & r \\ \hline
+\end{tabular}
+\end{center}
+\end{minipage}
+\end{example}
+
+\begin{example}{Byzantine Generals with 4 Generals}
+\begin{minipage}{0.75\textwidth} % Left side (text)
+The commander sends an \texttt{"attack"} message to three generals, 1, 2, and 3. General 2 is a traitor. The messages received are present on the table on the right. \\
+
+With $N=4$, and $4 \geq 3M+1$ or the equivalent $3/3 \geq M$ that means that a solution can work with one traitor.
+\end{minipage}
+\hfill
+\begin{minipage}{0.2\textwidth} % Right side (text)
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+    \hline
+    G & 1 & 2 & 3 \\ \hline
+    ~ & a & a & r \\ \hline
+\end{tabular}
+\end{center}
+\end{minipage}
+\end{example}
+
+With the use of recursion, and the fact that the generals send messages to each other and compare results, the algorithm works.
+
+\subsection{Introduction to Blockchain}
+Blockchain systems are a fascinating application of distributed systems principles. They provide a distributed, trustless, and immutable store of information, operating on a peer-to-peer (P2P) network.  This means there's no central authority, participants don't necessarily trust each other, and once data is added, it's exceptionally difficult to alter.
+
+\subsubsection{Key Features of Blockchain}
+\begin{enumerate}[itemsep=1pt, topsep=1pt]
+    \item \textbf{Distributed:} The data and operational logic are spread across multiple nodes (computers) in the network, rather than being centralized. This enhances resilience against single points of failure.
+    \item \textbf{Trustless:} Participants don't need to trust each other.  Trust is established through cryptographic mechanisms and consensus protocols, ensuring data integrity and validity.
+    \item \textbf{Immutable:} Once a \texttt{block} of data is added to the \texttt{chain}, it becomes extremely difficult, if not practically impossible, to alter it. This immutability is a cornerstone of blockchain's security and reliability.
+    \item \textbf{Peer-to-Peer (P2P) Network:}  A network architecture where each node can act as both a client and a server, communicating directly with other nodes.
+    \item \textbf{Ledger:} The data is stored in an append-only ledger. The most common representation of such a ledger is Bitcoin.
+    \item \textbf{Contracts:} Smart contracts, such as those used by Ethereum. These are essentially programs that execute on the blockchain and can be seen as a piece of information that the blockchain stores.
+\end{enumerate}
+
+\subsubsection{Consensus and Blockchain Features}
+There is some hype around blockchain systems. A lot of the hype relates to various blockchains and cryptocurrencies and their perceived value or \texttt{get rich quick} schemes associated with them. However, the underlying technology has interesting computer science implications for security, networks, and trust.
+
+\subsubsection{Consistency vs Consensus}
+\begin{itemize}[itemsep=1pt, topsep=1pt]
+    \item \textbf{Consistency} refers to ensuring that all nodes have a uniform and up-to-date view of the system's state. If multiple copies of a document exist, everyone should see the same version at all times.
+    \item \textbf{Consensus} refers to the process by which nodes in the system agree on a single value or decision, despite potential failures. If a group is voting on a decision, they must all agree on one final choice.
+\end{itemize}
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|p{6cm}|p{6cm}|}
+        \hline
+        \textbf{Aspect} & \textbf{Consistency} & \textbf{Consensus} \\
+        \hline
+        \textbf{Definition} & Ensuring that all nodes see the same data at the same time. & Agreement among nodes on a single value or decision. \\
+        \hline
+        \textbf{Scope} & Data synchronization across replicas. & Agreement on an operation or leader. \\
+        \hline
+        \textbf{Goal} & Maintain a consistent state across nodes. & Achieve agreement in the presence of failures. \\
+        \hline
+        \textbf{Example} & Linearizability, Sequential Consistency. & Paxos, Raft, Byzantine Agreement. \\
+        \hline
+        \textbf{Failure Handling} & A node may lag in consistency but eventually catch up (eventual consistency). & Consensus protocols tolerate node failures and network partitions. \\
+        \hline
+        \textbf{Relation} & Requires a mechanism (like consensus) to maintain consistency in distributed databases. & Consensus is a fundamental step in ensuring consistency in stateful distributed systems. \\
+        \hline
+    \end{tabular}
+    \caption{Differences between Consistency and Consensus}
+    \label{Diff-bw-Consistency-&-Consensus}
+\end{table}
+
+\subsubsection{Buzzwords}
+Blockchain is a combination of many features, but they can be boiled down to the following description: a distributed trustless store of immutable information on a P2P network. Let's unpack those terms:
+
+\begin{itemize}[itemsep=1pt, topsep=2pt]
+    \item \textbf{Distributed:} The data is replicated across many nodes in the network, making the system robust against failures.  This aligns with the core principle of distributed systems:  avoiding single points of failure and improving availability.
+    \item \textbf{Trustless:}  No single entity controls the system, and participants do not need to trust one another.  Cryptographic techniques (like hashing and digital signatures) and consensus mechanisms ensure data integrity and prevent tampering.
+    \item \textbf{Immutable:} Once data is added to the blockchain, it cannot be easily altered.  This is achieved through the use of cryptographic hashing (as we'll see below) and the chaining of blocks. The data up to the \texttt{top few blocks}($-6$ depth in case of Bitcoin) is unchangeable, but the more recent blocks can be changed.
+    \item \textbf{Peer-to-Peer (P2P):}  Nodes in the network communicate directly with each other, without a central server.
+\end{itemize}
+
+\subsection{Blockchain Components}
+Blockchain data is put into \texttt{blocks} which is a grouping of data that has a maximum size. The contents of this block must have some cryptographic properties.
+
+\subsubsection{Blocks}
+
+A block is a fundamental unit of a blockchain. It typically contains:
+
+\begin{enumerate}[itemsep=1pt, topsep=1pt]    
+	\item \textbf{Previous Block Hash:} A cryptographic hash of the previous block in the chain.  This creates the \texttt{chain} and is crucial for immutability.  A hash function takes an arbitrary input and produces a fixed-size output (the \texttt{hash}).  Crucially, even a tiny change in the input produces a drastically different hash output (the \texttt{avalanche effect}).  This means that if you change any data in a previous block, its hash will change, and so will the \texttt{previous hash} field of the subsequent block, and so on, making tampering immediately evident.
+    
+\begin{example}{Hashing Example}
+You can test this with command-line tools like \texttt{md5} (though MD5 is cryptographically broken and should not be used in a real blockchain) or \texttt{shasum} (which uses SHA algorithms). For example in a Unix-like terminal:
+\begin{lstlisting}[language=bash, caption=Block chain hash Example]
+$ echo test | md5
+d8e8fca2dc0f896fd7cb4cb0031ba249
+$ echo test1 | md5
+3e7705498e8be60520841409ebc69bc1
+\end{lstlisting}    	
+Notice the very large changes after changing the input even slightly.
+\end{example}
+
+    \item \textbf{Data:} This is the actual information stored in the block. In cryptocurrencies like Bitcoin, this is primarily transaction data (e.g., \texttt{Account A sent X amount to Account B}). In other blockchain systems, it could be any kind of data, including code such as in the case of smart contracts.
+
+    \item \textbf{Nonce:}  A number that is adjusted by \texttt{miners} to achieve a specific cryptographic property for the block's hash (more on this later).  The nonce is the key element in the \textit{\textbf{proof-of-work}} consensus mechanism.
+\end{enumerate}
+\vspace{1em}
+\begin{center}
+\begin{tikzpicture}[
+    % Load the positioning library
+    >= stealth,
+    node distance=3cm,
+    block/.style={rectangle, draw, minimum width=3cm, minimum height=1.5cm, text centered, align=center},
+    arrow/.style={thick,->,>=stealth}
+]
+% Blocks
+\node (block1) [block] {Block 1 \\ \footnotesize Prev Hash: 0000 \\ \footnotesize Tx, ... \\ \footnotesize Nonce: 42};
+\node (block2) [block, right=of block1] {Block 2 \\ \footnotesize Prev Hash: 8A7B \\ \footnotesize Tx, ... \\ \footnotesize Nonce: 13};
+\node (block3) [block, right=of block2] {Block 3 \\ \footnotesize Prev Hash: F4E2 \\ \footnotesize Tx, ... \\ \footnotesize Nonce: 91};
+% Arrows
+\draw [arrow] (block1.east) -- (block2.west);
+\draw [arrow] (block2.east) -- (block3.west);
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Mining and Proof-of-Work}
+
+The process of adding new blocks to the blockchain is called \texttt{mining}. The goal of mining is to find a nonce such that when the block's data (including the previous hash and the nonce) is hashed, the resulting hash meets a specific criterion, usually that it starts with a certain number of zeros.  This is the \texttt{difficulty} of the blockchain.
+
+Why leading zeros? Because it's computationally hard to find a hash that starts with many zeros.  Hash functions are designed to be unpredictable; the only way to find a suitable hash is to try many different nonces (brute-force search).\\
+
+\noindent \textbf{Proof-of-Work (PoW):} The process of finding a suitable \textit{nonce} (and thus, a valid block hash) is called \texttt{proof-of-work}. It demonstrates that computational effort has been expended. This makes it costly to tamper with the blockchain, as an attacker would need to redo the proof-of-work for any block they change, and \textit{all} subsequent blocks (because of the chaining via previous hashes).  The difficulty is adjusted dynamically to maintain a consistent block creation rate (e.g., about every 10 minutes for Bitcoin).\\
+
+\begin{example}{Imagine}
+Let's imagine a simplified difficulty requirement: the hash must start with one leading zero. Miners would try different nonces until they find one that, combined with the other block data, produces a hash meeting that criterion. The hash is going to be a hexadecimal value, which means that each digit could be 0-9 or a-f. So for each additional leading zero that is required, this multiplies the amount of work by 16x, because each hexadecimal digit represents four bits, and there is a 1 in 16 chance of getting a zero with each attempt.	
+\end{example}
+
+\subsubsection{Consensus: Longest Chain Rule}
+
+In a distributed system, multiple miners might find valid blocks around the same time. This can lead to temporary forks in the blockchain. The consensus mechanism resolves these forks. The most common rule is the \textit{longest chain rule}.
+
+\textit{\textbf{Longest Chain Wins:}} The chain with the most blocks (representing the most accumulated proof-of-work) is considered the valid chain. Nodes will switch to the longest chain they see.
+
+Why does this work? Because, statistically, the chain with the most work (longest chain) is the most likely to represent the \textbf{\textit{true}} state of the network, assuming the majority of the network's hashing power is honest.
+
+\subsubsection{Race Conditions and 51\% Attack}
+
+\textit{Race Conditions:} Since multiple miners are working simultaneously, it's possible for two or more miners to find valid blocks around the same time. This creates temporary forks in the chain. The network resolves these forks naturally over time because the chain with the most computational work put into it (i.e., the longest valid chain) is the chain that is accepted as the true chain by design.
+
+\textbf{\textit{51\% Attack:}} A theoretical vulnerability of blockchain systems. If a single entity (or a colluding group) controls more than 51\% of the network's hashing power, they could, in theory:
+
+\begin{enumerate}[itemsep=1pt, topsep=2pt]
+    \item Mine a \texttt{secret} chain longer than the public chain.
+    \item Release their longer chain, causing the network to switch to it (because of the longest chain rule).
+    \item This could allow them to \texttt{double-spend} coins (spend the same coins twice) or censor transactions.
+\end{enumerate}
+
+This attack is extremely expensive to pull off on a large, well-established blockchain like Bitcoin, making it highly unlikely. It requires more hashing power (and consequently, more energy and dedicated hardware) than the rest of the network combined.
+\subsection{Other Consensus Mechanisms}
+
+\textbf{Proof-of-Stake (PoS):} Instead of relying on computational work, PoS relies on \texttt{staking}. Users \texttt{stake} a certain amount of cryptocurrency, and their chance of being selected to validate a block (and earn rewards) is proportional to the amount they stake. This is much more energy-efficient than PoW. Ethereum is transitioning to a Proof-of-Stake consensus mechanism.
+
+\subsection{Confirmations}
+Confirmations refer to the number of blocks that have been added to the chain on top of the block containing a given transaction. Each new block makes it exponentially harder to revert the previous transaction. A given vendor/business may require 5 or more confirmations before a transaction is \texttt{cleared}, which is the point at which the transaction is considered irreversable.
+
+\subsection{Implications for Distributed Systems}
+Blockchain demonstrates several important principles of distributed systems:
+
+\begin{enumerate}[itemsep=1pt, topsep=2pt]
+    \item \textbf{Consensus:} Achieving agreement among distributed nodes in the presence of failures and malicious actors. Consensus algorithms, such as Proof-of-Work (PoW) and Proof-of-Stake (PoS), are used to ensure that all nodes agree on the state of the blockchain. These protocols must handle situations where nodes might crash, be unreachable, or even be intentionally trying to disrupt the network (Byzantine Fault Tolerance).  See Lamport, Shostak, and Pease's work on the Byzantine Generals Problem for a foundational understanding of this challenge \href{https://lamport.azurewebsites.net/pubs/byz.pdf}{The Byzantine Generals Problem By Lamport Paper}.
+
+    \item \textbf{Fault Tolerance:} The system can continue to operate correctly even if some nodes fail (e.g., crash, become unresponsive) or become malicious (attempt to corrupt the data or disrupt the network). Blockchain achieves fault tolerance through data replication (each node has a copy of the blockchain) and the consensus mechanism, which ensures that a majority of honest nodes can maintain the integrity of the chain.
+
+    \item \textbf{Data Consistency:} While \textit{strict} consistency (where all nodes see the \textit{exact} same data at the \textit{exact} same time) is often impossible in a distributed system due to network latency and potential partitions, blockchain achieves \textit{eventual} consistency. The longest chain rule ensures that, over time, the network converges on a single, agreed-upon history. Any temporary forks (due to race conditions in block creation) are resolved as the chain with the most accumulated proof-of-work becomes dominant. This relates to the CAP theorem (Consistency, Availability, Partition Tolerance), where blockchain generally prioritizes Availability and Partition Tolerance over strict Consistency.
+
+    \item \textbf{Immutability:} Data, once added to a block that has sufficient confirmations on the blockchain, is extremely difficult to alter. This provides a tamper-proof record. This is primarily enforced via the use of cryptographic hashing that is used in each block, where that block's contents as well as the hash of the preceeding block are hashed. This means to make a change would require changing all of the blocks, which is computationally very expensive, and requires controlling a majority of the system's computational resources, which is referred to as a 51\% attack.
+\end{enumerate}
+
+\subsection{Recommended Reading}
+\begin{itemize}[noitemsep]
+	\item \href{https://book.mixu.net/distsys/abstractions.html}{CAP Theorem}
+\end{itemize}
+\endclass{Week 9}

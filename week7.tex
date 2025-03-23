@@ -1,0 +1,147 @@
+\section{Week 7 : Performance, Attacks, and Consistency}
+This week covers scaling for high-performance web applications, focusing on issues that arise when scaling distributed systems.
+
+\subsection{Scaling for High Traffic}
+A major challenge in web applications is handling large volumes of traffic. When a website experiences a sudden, massive increase in traffic – perhaps because content has gone viral (terms like \texttt{"Reddit hug-of-death"}, \texttt{"Slashdot effect"}, and \texttt{"farked"} all describe this phenomenon) – it can resemble a Denial of Service (DoS) attack. The objective is to make the system faster. Scaling is the solution to maintain responsiveness under such loads.
+
+\subsection{Strategies for Scaling}
+There are a few general ways to make a system scale to a high number of requests.
+There are several main strategies for scaling:
+
+\begin{itemize}[topsep=4pt]
+\item \textbf{Adding more servers:} This increases capacity, but it comes with a cost. Remember, the cloud is essentially renting someone else's servers, so this isn't free.
+\item \textbf{Writing better code:} Code optimization can certainly improve efficiency. However, this is often a time-consuming and expensive process.
+\item \textbf{Doing less work:} This is often the most effective approach, and a key technique is caching.
+\end{itemize}
+
+\subsubsection{Caching}
+Caching is the art of avoiding redundant work. By storing the results of previous computations or data retrievals, we can reuse those results later, eliminating the need to repeat the same operations. The HTTP protocol itself incorporates caching mechanisms, such as the \texttt{"304 Not Modified"} response and HEAD requests.
+We have browser cache at our local storage and some browser built-in automatic caching. webservers also have a cache (webcache) that is very close to the server with atleast a 1 GiG of bandwidth. \href{https://www.perplexity.ai/search/what-is-memcache-and-who-insta-elsmNvE8TgqhZgsP_K061Q}{Memcache} is a 3rd party caching solution that that the developer installs and setups.
+
+\subsubsection{Client-Side vs. Server-Side Responsibilities}
+
+A common strategy is to shift more of the processing burden to the client, creating what's often called a \texttt{"chubby client"}. This contrasts with a \texttt{"thin client"} model, where most of the processing is performed on the server. We can use techniques like AJAX (Asynchronous JavaScript and XML) and XHR (XMLHttpRequest) to make many small requests, building up the web page incrementally using \href{https://aws.amazon.com/microservices/}{Microservices}. Local storage on the client-side (in the browser) allows us to cache data, further reducing the load on the server. Caching is implemented using key-value pairs. When we are able to store results of a task to retrieve at a later time, we call the results idempotent.
+
+\subsection{Content Delivery Networks (CDNs)}
+
+CDNs act as sophisticated caches, distributed geographically. They are particularly effective for handling static content like images, videos, and large JavaScript files. By offloading this content to a CDN, we free up our own servers and improve overall speed. URIs for resources hosted on a CDN often include a random element or a date/timestamp. This helps ensure that updated versions of the content are fetched when necessary (a technique called \texttt{"cache busting"}).
+
+\subsection{Attacks}
+Distributed systems are vulnerable to various attacks.
+
+\begin{itemize}
+\item \textbf{Denial of Service (DoS) Attack:} The goal of a DoS attack is to prevent a server from servicing legitimate requests, effectively taking it offline.
+\item \textbf{Distributed Denial of Service (DDoS) Attack:} This is a more potent form of DoS attack, where many compromised computers (often called \texttt{"zombies"} or a \texttt{"botnet"}) simultaneously flood the target server with requests. This distributed nature makes it much harder to block, as simply blocking a single IP address won't suffice.
+\item \textbf{Reflection Attack:} This attack type sends messages in the User Diagram Protocol (UDP) which does not guarantee the delivery or ordering of messages. A reflection attack exploits services like NTP, sending a small request that generates a much larger response. This response is directed at the victim, amplifying the attack.
+\end{itemize}
+These attack commonly target the following vectors:
+
+\begin{enumerate}[label=\roman*),noitemsep,topsep=4pt]
+\item Maxing out network bandwidth.
+\item Overloading CPU time.
+\item Consuming excessive memory.
+\end{enumerate}
+
+\subsection{Error Handling}
+
+Distributed systems introduce new failure modes. We need to consider extended failure modes, where some parts of the system are functioning while others are not. The key is to fail gracefully. This means:
+
+\begin{enumerate}[label=\roman*),noitemsep, topsep=2pt]
+\item Having functional pieces, but not a functional whole.
+\item The system should strive to do what it can, even if some components are unavailable.
+\item Provide meaningful error messages to the user (e.g., \texttt{Temporarily down for maintenance}).
+\end{enumerate}
+
+Recovery often involves automatic reconnection attempts, potentially with timeouts. A \texttt{`while true'} loop is sometimes used to constantly attempt reconnection.
+Use code with caution.
+\subsection{Load Balancers}
+
+Load balancers are crucial for scaling. They distribute incoming traffic across multiple servers (often organized in \texttt{tiers}). This prevents any single server from being overwhelmed. A simple load balancing strategy is \texttt{round-robin}(often used for download requests) where requests are sent to servers in a sequential order.
+
+For example, consider a system with a web browser client, a gateway, and a database. If we create replicas (clones) of the database, a load balancer can distribute requests between them. However, if one database goes down, and we're using something like a two-phase commit protocol, problems arise if the databases are no longer synchronized.
+
+\textbf{Two-Phase Commit (2PC)}: Two-phase commit is a protocol designed to ensure data consistency across multiple databases. The process happens over two phases, and each uses messages between the database and the client.
+\begin{enumerate}[itemsep=1pt, topsep=2pt]
+\item \textbf{Voting Phase (Query):} The coordinator sends a \texttt{"query"} message to all workers. The workers respond with a \texttt{"vote"} (e.g., "true" for "yes, I can commit").
+\item \textbf{Commit Phase:} If all workers vote \texttt{"true"}, the coordinator sends a \texttt{"commit"} message. If any worker votes \texttt{"false"} (or doesn't respond), the coordinator sends a \texttt{"rollback"} message. The message is a \texttt{"ack"} (acknowledgement).
+\end{enumerate}
+
+Even with 2PC, problems can occur. For example, if a worker crashes before receiving the \texttt{"commit"} message, the system will be in an inconsistent state. This illustrates that while distributed systems offer advantages, they introduce significant complexity in error handling and ensuring data consistency.
+There exist other distributed consensus protocols, such as \href{https://raft.github.io}{Raft}.
+
+
+\subsection{Consistency}
+The need to scale by adding more hosts brings the issue of consistency. This is a the scenario: We have data that is getting fetched all the time, because it has gone viral. We use a single database, that is maxed out and it can't handle any more requests.
+
+There are a web browser and a client that sends requests, and the access is through a gateway(API server, website) that gets the data from the database host, and that is currently maxed out.
+
+\subsubsection{Replicas}
+
+We are setting a replica(clone, exact copy) for the current database. In case the first database burns, the other one can do all the work. We also gain bandwidth, and CPU time. Using more database hosts by using replicas, in order to create redundancy, which will have some perks:
+\begin{enumerate}[label=\roman*), noitemsep, topsep=2pt]
+\item Full redundancy
+\item More bandwidth (assuming they don't share)
+\item More processing power
+\end{enumerate}
+
+\subsubsection{Problems with replicas}
+
+Are networks reliable?
+Are the systems on?
+
+\begin{example}{What if message is dropped (garbled or intercepted)}
+\begin{enumerate}[noitemsep]
+	\item The two database values for $Z$, for instance, are not equal
+\item When the value of $A$ in the database will be set to one and to two, the network is now restored, the question is what value will hold as a result
+\end{enumerate}
+\end{example}
+
+If this is financial data, if the message is lost, and the databases are not in sync, this could mean that we lost information about how much money is there.
+
+\textbf{A system goes offline:} Crash, reboot(planned or otherwise), network makes it unavailable. One database is down before it gets commit. The values are not synchronized in the databases.
+
+
+\subsubsection{One solution : 2PC - Two Phase Commit}
+In this method, there is a voting phase, and a commit phase. It can be done as a 
+\begin{enumerate}[label=\roman*), noitemsep, topsep=1pt]
+\item Client-server
+\item Coordinator
+\item Workers
+\end{enumerate} 
+Also, it can be done as peer-to-peer client-server network.
+
+\vspace{0.5em}
+There are the following phases for the protocol:
+\begin{enumerate}[, noitemsep, topsep=1pt]
+\item Query - lock
+\item Vote
+\item Commit
+\item Acknowledgement
+\end{enumerate}
+\vspace{0.5em}
+Rob presented in order message passing to show the 2PC protocol. Let assume there are $n$ workers:
+\begin{enumerate}[noitemsep, topsep=2pt]
+\item When worker 1 sends to the other $n - 1$ workers the query, this will represent the lock
+\item The fleet of workers will send to $n - 1$ messages back to the worker 1, with \textit{vote=True}
+\item If all of the workers agree, that value will lock all of the databases.
+\item Then work 1 sends a commit messages to rest of the $n-1$ workers and the rest of the workers will set the updated value for that variable. 
+\item The $n-1$ workers will send back \texttt{ACK} message, stating the value is updated.
+\end{enumerate}
+This is all rendevouz messages. 
+
+\begin{example}{Explanation for 2 PC Protocol}
+There is a request to write 
+$Z = 3$. The Worker 1 will send a request, a query for the key $Z$, a lock request for $Z$. If $Z$ is not locked, the workers will reply \texttt{"vote=true"} and the data for $Z$ will be locked, but not written. After worker 1 gets the \texttt{"vote=true"} message from all of the other workers, it will send a commit message to every worker, the database will set  $Z=3$ . If it does not get \texttt{"vote=true"} from all the databases, it can say \texttt{"unlock"}.
+\end{example}
+
+With this method, there is still a problem with consistency. If the commit message is not sent, then a message saying \texttt{"roll back"} is sent.
+
+\subsubsection{3PC-Three Phase Commit}
+It adds another layer of acknowledgments when the client the first acknowledgement happens, the worker 1 sends another acknowledgement message for \texttt{"OK Everyone's commited, right?"}. This creates a lot of communation/messages sending requests back and forth.
+
+\subsection{Recommended Readings}
+\begin{itemize}[noitemsep]
+	\item \href{https://www.f5.com/labs/learning-center/what-is-a-dns-amplification-attack}{What Is a DNS Amplification Attack?}
+	\item \href{https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage}{Window: localStorage property}
+\end{itemize}
+\endclass{Week 7}

@@ -1,0 +1,133 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage[a4paper, left=0.6in, right=0.6in, top=0.8in, bottom=0.8in]{geometry}
+\usepackage[svgnames]{xcolor}
+\usepackage{titlesec}
+\usepackage{booktabs} % For better-looking rules
+\usepackage{ragged2e} % For RaggedRight
+\usepackage{tabularx}
+\usepackage{enumitem} % For list
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows, shapes}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath} % For math mode
+\usepackage{caption}
+
+\usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathreplacing, calc}
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\definecolor{tokyonight-blue}{RGB}{0,0,91}
+\definecolor{tokyonight-bluesub}{RGB}{0,70,135}
+\definecolor{tokyonight-bluesubsub}{RGB}{229,52,132}
+
+% Define custom colors for a light theme
+\definecolor{backcolour}{rgb}{0.95, 0.95, 0.92}   % light background
+\definecolor{keywordcolour}{rgb}{0.0, 0.45, 0.70}  % dark blue for keywords
+\definecolor{stringcolour}{rgb}{0.58, 0.0, 0.82}   % purple for strings
+\definecolor{commentcolour}{rgb}{0.0, 0.5, 0.0}    % green for comments
+\definecolor{identifiercolour}{rgb}{0.15, 0.15, 0.15} % very dark gray for identifiers
+\definecolor{numbercolour}{rgb}{0.5, 0.5, 0.5}     % medium gray for numbers
+
+
+% Define colors
+\definecolor{consistencyColor}{RGB}{220,235,250}
+\definecolor{availabilityColor}{RGB}{220,250,235}
+\definecolor{partitionColor}{RGB}{250,225,225}
+\definecolor{paxosColor}{RGB}{230,215,220}
+\definecolor{gossipColor}{RGB}{225,225,210}
+\definecolor{twopcColor}{RGB}{210,230,230}
+
+
+\titleformat{\section}
+  [block]
+  {\Large\bfseries\color{tokyonight-blue}} % Large
+  {\thesection}
+  {1em}
+  {}
+
+\titleformat{\subsection}
+  [block]
+  {\large\bfseries\color{tokyonight-bluesub}} % Smaller
+  {\thesubsection}
+  {1em}
+  {}
+
+\titleformat{\subsubsection}
+  [block]
+  {\bfseries\color{tokyonight-bluesubsub}} % Even smaller
+  {\thesubsubsection}
+  {1em}
+  {}
+
+\definecolor{exampleblue}{RGB}{59,52,119}
+% === Custom tcolorbox for Examples ===
+
+\newtcolorbox[auto counter, number within=section]{example}[2][]{
+    colback=exampleblue!5!white,   % Background color
+    colframe=exampleblue!75!black,  % Border color
+    coltitle=white,                % Title text color
+    fonttitle=\bfseries,           % Bold title
+    title=Example~\thetcbcounter: #2, % Auto-numbered title
+    #1                           % Additional options
+}
+
+\def\endclass#1{\vspace{1em}\par\noindent\hrulefill\fbox{\small End of #1}\hrulefill\vskip 5pt plus 1pt\par }
+
+  
+\renewcommand{\lstlistingname}{Codeblock}
+\lstset{
+  backgroundcolor=\color{backcolour},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{keywordcolour}\bfseries,
+  stringstyle=\color{stringcolour},
+  commentstyle=\color{commentcolour}\itshape,
+  identifierstyle=\color{identifiercolour},
+  numberstyle=\tiny\color{numbercolour},
+  numbers=left,
+  numbersep=5pt,
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  captionpos=b,
+  tabsize=2,
+  showspaces=false,
+  showtabs=false,
+  frame=single,
+  xleftmargin=0.2cm,
+  xrightmargin=0.2cm,
+  showstringspaces=false % Also hide spaces inside strings
+}
+
+
+
+
+\begin{document}
+\title{COMP 3010 Notes}
+\date{Jan 8, 2025 -- April 9, 2025}
+\author{Saksham Bedi}
+
+
+\maketitle
+\pagebreak
+\tableofcontents
+\bigskip
+
+
+
+\include{week1}
+\include{week2}
+\include{week3}
+\include{week4}
+\include{week5}
+\include{week6}
+\include{week7}
+\include{week8}
+\include{week9}
+\include{week10}
+\include{week11}
+\include{week12}
+
+\end{document}

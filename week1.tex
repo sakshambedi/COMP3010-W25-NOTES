@@ -1,0 +1,185 @@
+\section{Week 1 : Distributed Systems}
+
+This is the content for week 1.
+
+\setcounter{subsection}{0}
+
+\subsection{Distributed Systems}
+A distributed system is a collection of independent computers that appear to users as a single coherent system. These systems are designed to work together, sharing resources and coordinating their actions to achieve common goals. Systems often called ‘hosts’.
+
+\subsection{2 Broad Models}
+\begin{itemize}[noitemsep, topsep=4pt]
+    \item \textbf{Server-Client}: A server with many clients. It's one machine (that is stateful) with all these dumb clients that are doing very little for us. Example: SSH is an example.
+    \item \textbf{Peer to Peer}: A 2-way relation. (Example: Blockchain, torrent, Messaging app (Signal)).
+\end{itemize}
+
+\subsubsection{Thin vs Thick Client in Server-Client}
+\begin{itemize}[noitemsep,  leftmargin=*,label=, topsep=1pt] 
+	\item \textbf{Thin client}: A thin client is a lightweight computer device that relies heavily on a central server for most of its computational tasks. \\
+	\item \textbf{Thick Clients}: Also known as fat clients or rich clients, thick clients are more similar to traditional desktop computers. For Example: A modern web browser, such as when watching YouTube, receives a video stream from the server while offloading the decoding of the stream to the client.
+\end{itemize}
+
+\begin{table}[h]
+    \centering
+    \label{thin-vs-thick}
+    \begin{tabularx}{\textwidth}{@{} >{\RaggedRight\arraybackslash}p{0.2\textwidth} | >{\RaggedRight\arraybackslash}X | >{\RaggedRight\arraybackslash}X @{}}
+        \toprule
+        Aspect & Thin Client & Thick Client \\
+        \midrule % Rule after header
+        Processing Location & Relies on central servers for most processing tasks. & Performs significant processing locally with powerful hardware. \\
+        \midrule % Rule between rows
+        Network Dependency & Requires constant network connectivity to function. & Can function offline and perform tasks without server access. \\
+        \midrule
+        Cost & Generally less expensive to deploy and maintain due to simpler hardware. & Higher cost due to more powerful hardware and maintenance needs. \\
+        \midrule
+        Security & Enhanced security with centralized data storage. & Increased security risks due to local data storage. \\
+        \midrule
+        Customization & Limited customization; centrally managed by IT administrators. & Allows more user customization and control over installed software. \\
+        \midrule
+        Performance & May experience latency; dependent on network and server. & Better performance for resource-intensive tasks. \\
+        \midrule
+        Local Resources & Minimal local storage and processing power (e.g., 8 GB storage). & Ample local resources, including storage and dedicated graphics. \\
+        \midrule
+        User Interface & Simplified interface; primarily an access point to server-hosted applications. & Rich and advanced user interface with responsive user experience. \\
+        \midrule
+        Energy Efficiency & Consumes less power, contributing to a smaller carbon footprint. & Consumes more power due to high-performance hardware. \\
+        \midrule
+        Management & Centralized management makes updates and security policy enforcement easier. & Requires individual maintenance and management. \\
+        \bottomrule % Rule at the bottom
+    \end{tabularx}
+    \caption{Thin vs Thick Client Comparison}
+\end{table}
+
+
+\subsection{What is cloud?}
+Cloud computing refers to the delivery of computing services (such as servers, storage, databases, networking, software, analytics, and intelligence) over the internet ("the cloud") to offer faster innovation, flexible resources, and economies of scale.
+Elastic cloud is just adding more hosts to a distributed system.
+
+\subsection{Resource Location}
+
+How to discover resources, which can be the client itself. So how do we find them, how do we connect to them. There are different approaches:
+
+\begin{itemize}[topsep=2pt]
+    \item \textbf{Hard Code it:} Hard coding the address of the server ex: \texttt{130.179.28.115}. This is super hard to remember and it's not flexible. Flexible: if the server goes down there is no way to let people to know there is a different machine.
+    \item \textbf{Configuration File:} Refer to the configuration file on the machine to find the IP address. For instances: IP ADDRESS. IPv4 address is a collection of 4 numbers in a format \texttt{1.1.1.1}. The numbers can go from 1 - 255.
+
+\begin{lstlisting}[language=bash,caption=Getting the hostname from the configration file]
+ip addr
+# or
+ifconfig
+# or
+hostname
+\end{lstlisting}
+
+    \item \textbf{Announce yourself:} When a laptop/printer joins a network usually a printer, or a fileshare and sometimes a laptop where the printer (for this instance) is connected to the router. The printer says \textit{Hello, what's available for me} to the router and the router will repeat this message for the others. And you basically announce yourself that I am a host. This is part of the DHCP (Dynamic Host Configuration Protocol). This is a MAC protocol. This will also give an IP address back. Works well in the local network where we have 256 hosts.
+%
+%\begin{tikzpicture}[
+%    node distance = 8cm,
+%    server/.style={rectangle, draw, fill=red!20, minimum width=2.5cm, minimum height=1.5cm, text centered},
+%    client/.style={rectangle, draw, fill=blue!20, minimum width=2.5cm, minimum height=1.5cm, text centered},
+%    device1/.style={rectangle, draw, fill=gray!20, minimum width=4cm, minimum height=1cm, text centered},
+%    device2/.style={rectangle, draw, fill=green!20, minimum width=4cm, minimum height=1cm, text centered},
+%    arrow/.style={-{Stealth[length=3mm, width=2mm]}, thick}
+%]
+%
+%% Nodes
+%\node[server] (router) {Router \\ (DHCP Server)};
+%\node[client, right=of router] (printer) {Printer \\ (DHCP Client)};
+%\node[device1, below=2cm of router] (device1) {client 1};
+%\node[device2, above=2cm of router] (device2) {client 2};
+%
+%% DHCP Message Flow with curved arrows:
+%
+%% 1. Printer broadcasts a DHCPDISCOVER message to the Router.
+%\draw[arrow, bend left=20] (printer) -- node[midway, above] {1. DHCPDISCOVER} (router);
+%
+%% 2. Router replies with a DHCPOFFER.
+%\draw[arrow, bend right=20] (router) -- node[midway, below] {2. DHCPOFFER} (printer);
+%
+%% 3. Printer sends a DHCPREQUEST to accept the offered configuration.
+%\draw[arrow, bend left=15] (printer) -- node[midway, above] {3. DHCPREQUEST} (router);
+%
+%% 4. Router finalizes the lease by sending a DHCPACK.
+%\draw[arrow, bend right=15] (router) -- node[midway, below] {4. DHCPACK} (printer);
+%
+%% 5. Once configured, the Printer announces its presence to the Router.
+%\draw[arrow, bend left=10] (printer) -- node[midway, above] {5. Announcement} (router);
+%
+%\end{tikzpicture}
+%
+%
+%
+%    \begin{figure}[h]
+%        \centering
+%        \includegraphics[width=0.8\textwidth]{./imgs/DHCP.jpeg} % Replace with your actual image path
+%        \caption{Announcing Yourself (device) using DHCP Protocol}
+%%    \end{figure}
+%
+    \item \textbf{Use a lookup service:} Announcing yourself doesn't scale well at a global (a billion, trillion or maybe even more scale) level. For instance: use a lookup service to translate a Domain Name into an IP Address from \texttt{Google.com} $\rightarrow$ \texttt{'123.345.456.678'}. Key/Value pair or a hash value. Lookups are $\mathcal{O}(1)$ operation.
+    \item \textbf{Naming requirements:} Names are in a namespace. \texttt{Google.com} is unique. Conditions that need to be required for resource location requests:
+        \begin{itemize}
+            \item Location Transparency: It doesn't matter what is the IP address of the computer that is serving the content. This is Local Transparency where the name of the website is decoupled from the location. Location transparency makes it fault-tolerant if any machine goes down, the requests can be resolved by the other servers but the requester won't see a difference.
+            \item Global Uniqueness: Also the resource location requests, the naming has been globally unique. The most popular DNS service is called bind.
+            \item Ability to access all names: It also needs the ability to access all names from all locations and it has to be fast.
+            \item Protocol Identification: If this is the ftp protocol we need to speak ftp to this thing and access/serve file and directory listings. Services run on different ports, for instance, http runs on port 80, ftp on port 22. In the case of \texttt{https://2.2.2.2./page.html}. The request will go to the machine's port 80 associated with the http port and get an http response.
+	\end{itemize}
+\end{itemize}
+
+
+\subsection{URI vs URL's}
+
+URL is a special case (subset) of URI. For Example:
+
+\begin{verbatim}
+protocol://user:password@host:port/dir?query#fragment
+https://e	xample.com/path/resource.txt?GET=query&key=value#fragment
+\end{verbatim}
+
+\subsection{Ports}
+
+Ports 0 - 1023 are reserved well-known ports. Must be admin/root to listen to these ports.
+Ports 1024 - 65535 are general use.
+
+We need 2 ports, 1 port accepts the connection and then transfers other to another port that establishes a socket.
+
+\subsection{DNS}
+
+Domain Name System. This is a hierarchical lookup. For instance \texttt{robin.cs.umanitoba.ca}, CA is the highest hierarchy meaning located in CA (Canada).
+%
+%%\begin{center} % Center the entire TikZ picture
+%%\begin{tikzpicture}[
+%%    node distance=1cm, 
+%%    every node/.style={
+%%        draw, 
+%%        rounded corners, 
+%%        align=center,
+%%        inner xsep=10pt, % Add horizontal padding
+%%        inner ysep=5pt,  % Add vertical padding
+%%        thick,           % Make border thicker
+%%        fill=yellow!20,   % Light yellow fill color (adjust as desired)
+%%    },
+%%    >=latex,         % Set default arrow tip to latex
+%%    every edge/.style={thick} % Make edges thicker
+%%]
+%%  \node (CA) at (0,0) [fill=red!20, draw=red] {.ca\\(Canada)}; % Different color for root
+%%  \node (UManitoba) [below=of CA, fill=blue!20, draw=blue] {umanitoba.ca\\(UofM)};
+%%  \node (CS) [below=of UManitoba, fill=green!20, draw=green] {cs.umanitoba.ca\\(CS Department)};
+%%  \node (Robin) [below=of CS, fill=purple!20, draw=purple] {robin.cs.umanitoba.ca\\(complete address for the server)};
+%%
+%%  \draw [-latex] (CA) -- (UManitoba);
+%%  \draw [-latex] (UManitoba) -- (CS);
+%%  \draw [-latex] (CS) -- (Robin);
+%%
+%%  % Add some vertical space above and below the graph (optional)
+%%  \path (CA) -- ++(0,1cm);  % Add space above
+%%  \path (Robin) -- ++(0,-1cm); % Add space below
+%%
+%%\end{tikzpicture}
+%%\end{center}
+
+But where are the .ca root servers? There is a list of root servers that can be searched using Google.
+
+Also, our router also caches recently used DNS entries, so this reduces the load on the root server and returns a faster response. In case of failure cache hit, the request will go to the ISP who also has a cache. And if that fails again, then the request hits the root server.
+
+The DNS records are cached. But that has a downside, one
+\endclass{Week 1}

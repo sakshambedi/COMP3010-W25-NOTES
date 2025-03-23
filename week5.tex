@@ -1,0 +1,242 @@
+\section{Week 5 : Introduction to Web Computing}
+Web computing is a subset of distributed computing and it is based on HTTP, which is a simple, text-based protocol. It was originally developed at CERN in 1989 by Tim Berners-Lee.
+
+\subsection{Web vs. Internet}
+The Internet is a broad, interconnected framework that supports many different protocols. The Web, specifically, is the subset of the Internet that uses the HTTP protocol, normally operating on ports 80 (HTTP) and 443 (HTTPS). Other protocols, such as email (SMTP) or file transfers (FTP), operate on the Internet but are not technically part of the Web.
+
+\subsection{Web Computing Characteristics}
+\begin{itemize}
+    \item \textbf{Server-Oriented}: Web computing is primarily a client-server model. Clients (usually web browsers) make requests to servers, which then respond with data.
+    \item \textbf{Platform Independent}: The HTTP protocol is platform-independent. This means that clients and servers can run on any operating system (Windows, macOS, Linux, etc.) and still communicate effectively.
+    \item \textbf{Based on HTTP Protocol}: Any device or application that can understand and respond to HTTP requests can participate in web computing.
+\end{itemize}
+
+\subsection{HTTP (HyperText Transfer Protocol)}
+
+HTTP is a text-based protocol that allows the client to retrieve specific resources from the server.
+
+\subsubsection{How HTTP Works}
+
+\begin{enumerate}
+    \item \textbf{Client Request}: The client (e.g., a web browser) initiates a TCP connection to a web server, typically on port 80 (for HTTP) or 443 (for HTTPS). It then sends an HTTP request message.
+    \item \textbf{Server Response}: The server processes the request and sends back an HTTP response message.
+    \item \textbf{Connection Closure}: After the response is sent, the server closes the TCP connection (though keep-alive connections are possible). Each time the user comes up as a new client.
+\end{enumerate}
+
+\begin{example}{Example}
+Consider you're using a web browser to visit \texttt{home.cs.umanitoba.ca}.
+\begin{enumerate}[noitemsep]
+    \item Your browser initiates a TCP connection to \texttt{home.cs.umanitoba.ca} on port 80.
+    \item Your browser sends an HTTP request, looking something like:
+    \begin{lstlisting}[language=html,caption=HTTP Request]
+GET /~robg/index.html HTTP/1.1
+Host: home.cs.umanitoba.ca    	
+    \end{lstlisting}
+    \item The server processes the request and sends back an HTTP response.
+    \item The server closes the connection.
+\end{enumerate}
+\end{example}
+
+
+
+\subsubsection{HTTP is Stateless}
+
+Each HTTP request is independent of previous or subsequent requests. The server does not maintain any session state between requests. That is made by creating a new TCP connection per request.
+
+\subsubsection{HTTP Request Structure}
+
+An HTTP request has three main parts:
+
+\begin{enumerate}
+    \item \textbf{Message Type (Start Line)}:
+    \begin{enumerate}
+        \item \textbf{Request Type}: Specifies the action to be performed, such as GET, POST, PUT, DELETE, etc.
+        \item \textbf{Absolute Path}:  The path of the resource being requested (e.g., `/index.html`).
+        \item \textbf{HTTP Version}: The version of the HTTP protocol being used (e.g., `HTTP/1.1`).
+    \end{enumerate}
+    \item \textbf{Header Lines}:
+    \begin{enumerate}
+        \item These are key-value pairs providing additional information about the request, such as the user agent (browser), accepted content types, and more.
+        \item The header section is terminated by a blank line (two newlines in a row).
+    \end{enumerate}
+    \item \textbf{Body}:
+    \begin{enumerate}
+        \item This is the optional data being sent with the request, typically used with POST or PUT requests.
+        \item Only the message type is required.
+    \end{enumerate}
+\end{enumerate}
+
+
+\begin{example}{Example}
+\begin{lstlisting}
+GET /~/robg/index.html HTTP/1.1
+Host: home.cs.umanitoba.ca			
+\end{lstlisting}
+
+The code above represents a simple HTTP GET request.
+\begin{itemize}[noitemsep]
+    \item \texttt{GET} is the request type.
+    \item \texttt{/$\sim$/robg/index.html} is the absolute path.
+    \item \texttt{HTTP/1.1} is the HTTP version.
+\end{itemize}
+And \texttt{Host: home.cs.umanitoba.ca} is a header.
+\end{example}
+
+\subsubsection{Useful HTTP Headers}
+\begin{itemize}
+    \item \textbf{Content-Length}: Required if you are sending a body. It indicates the size of the response body in bytes.
+    \item \textbf{Content-Type}: Specifies the media type of the resource (e.g., `text/html', `application/json', `image/jpeg').  This uses MIME types.
+    \item \textbf{User-Agent}:  Identifies the client (browser) making the request. For analytics.
+    \item \textbf{Referer [sic]}:  Indicates the URL of the page that linked to the requested resource.  (The misspelling is historical.)
+\end{itemize}
+\textbf{MIME Types}:
+MIME (Multipurpose Internet Mail Extensions) types specify the nature and format of a document or file.  They are typically two-part identifiers: a type and a subtype, separated by a slash (e.g., \texttt{text/html}, \texttt{image/gif}, \texttt{application/json}).
+
+
+\subsubsection{HTTP Response Structure}
+HTTP responses have a structure similar to requests:
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Message Type (Status Line)}: Indicates the HTTP version and a status code (e.g., \texttt{HTTP/1.1 200 OK}).
+    \item \textbf{Headers}: Key-value pairs providing information about the response (e.g., content type, content length).
+    \item  \textbf{Body}: The actual content being returned (e.g., HTML, JSON, an image).
+\end{enumerate}
+
+\subsubsection{HTTP Status Codes}
+Status codes are three-digit numbers that indicate the outcome of the request. They are grouped into five classes:
+\begin{enumerate}
+    \item \textbf{1xx (Informational)}: Indicates that the request was received and the process is continuing.  (Rarely seen in practice.)
+    \item \textbf{2xx (Successful)}: The request was successfully received, understood, and accepted.  The most common is \texttt{200 OK}.
+    \item \textbf{3xx (Redirection)}: Further action needs to be taken to complete the request.  \texttt{301 Moved Permanently} is common.
+    \item \textbf{4xx (Client Error)}: The request contains bad syntax or cannot be fulfilled. \texttt{403 Forbidden}. \texttt{404 Not Found} and \texttt{401 Unauthorized} \texttt{400 Bad Request} are common. \texttt{405} (Mostly seen from the API servers.) if you hosting something that can only 1 kind of response.
+    \item \textbf{5xx (Server Error)}: The server failed to fulfill an apparently valid request. \texttt{500 Internal Server Error} is the most common, when the databse is locked, or not running, basically anything on the server side fault.
+\end{enumerate}
+
+
+\subsection{Using Telnet to Request HTTP Resources}
+Telnet is a simple, text-based network protocol that can be used to make raw TCP connections. Since HTTP runs on top of TCP and is text-based, we can use Telnet to demonstrate HTTP requests.
+
+\begin{example}{Telnet Example for UManitoba website}
+\begin{lstlisting}[language=bash,caption=Telnet Message]
+telnet home.cs.umanitoba.ca 80
+GET /~robg/index.html HTTP/1.1
+Host: home.cs.umanitoba.ca	
+\end{lstlisting}
+
+The command above is a simple HTTP request by using telnet:
+\begin{enumerate}[label=\roman*),itemsep=1pt]
+    \item \texttt{telnet home.cs.umanitoba.ca 80}:  This opens a TCP connection to \texttt{home.cs.umanitoba.ca} on port 80.
+    \item \texttt{GET /$\sim$/robg/index.html HTTP/1.1}:  This is the HTTP request line.
+    \item  \texttt{Host: home.cs.umanitoba.ca}:  This is a required header in HTTP/1.1.
+The two enters, which represent a blank line, this signals the end of the headers.
+\end{enumerate}
+
+\begin{lstlisting}[language=html, caption=Response from the server]
+HTTP/1.1 200 OK
+Date: Fri, 22 Sep 2023 20:29:51 GMT
+Server: Apache/2.4.6
+Last-Modified: Wed, 14 Sep 2022 20:37:42 GMT
+ETag: "295-5e8a91b959180"
+Accept-Ranges: bytes
+Content-Length: 661
+Permissions-Policy: interest-cohort=()
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+Transfer-Encoding: chunked
+Content-Type: text/html; charset=UTF-8
+
+<!doctype html>
+<html ...>  (The rest of the HTML content)
+\end{lstlisting}	
+
+
+The server responds with the HTTP headers and the content of `index.html`, after which it will typically close the connection.
+\end{example}
+
+Insomnia is a tool to communicate and test web servers and APIs. It can send different request, as GET, POST, PUT, PATCH, DELETE and others.
+
+\subsection{Building an HTTP Server}
+
+The most basic function of a web server is to serve files in response to requests. In Python, you can spin up a simple HTTP server with a single command in the terminal:
+
+\begin{lstlisting}[language=bash, caption=Running the http.server]
+python -m http.server 8000
+\end{lstlisting}
+
+This command will start a server on port 8000, serving files from the current directory.
+
+\subsection{Understanding HTTP GET Requests}
+The server that was started will respond to HTTP GET requests, which are used for retrieving data and can be used to build a web server.
+It can respond to GET requests, which are used to retrieve files from the server. The structure of a basic GET request is as follows:
+
+\begin{enumerate}[label=\alph*), itemsep=1pt]
+    \item \textbf{Verb}: This indicates the type of request, typically \texttt{GET}.
+    \item \textbf{Path}: The location of the requested resource (file or folder).
+    \item \textbf{HTTP Protocol Version}: Usually \texttt{HTTP/1.1}.
+\end{enumerate}
+
+\begin{example}{Example for the http request}
+\begin{lstlisting}[language=html, caption=Example]
+GET /week01/class_01-intro/ HTTP/1.1
+\end{lstlisting}
+If a requested resource is not found, the server will return a \texttt{404 error}.
+\end{example}
+
+\subsection{Understanding HTTP POST Requests}
+HTTP POST requests are used to send data to the server. It is used for 
+\begin{enumerate}[label=\roman*), noitemsep]
+	\item Login
+	\item Reply to a forum post
+	\item Should make a new item.
+\end{enumerate}
+ A typical POST request includes: The verb POST, The path of the file or folder, HTTP protocol (HTTP/1.1).
+After that comes the header which contains Host, Content-Length and Content-Type. You can also post json object.
+
+\subsection{Parsing HTTP Requests}
+
+Parsing an HTTP request involves breaking it down into its constituent parts.  For a GET request, this is relatively simple:
+
+\begin{enumerate}[noitemsep, itemsep=1pt]
+    \item Split the first line into three parts: the verb, the path, and the HTTP version.
+    \item Subsequent lines represent headers, which are key-value pairs.
+    \item  Two consecutive newlines indicate the end of the headers and the beginning of the body (if any).
+\end{enumerate}
+
+Parsing POST requests is slightly more complex because they can contain data in the body, which is often URL-encoded. URL encoding replaces spaces with plus signs ($+$) and special characters with their hexadecimal ASCII codes (e.g., \texttt{\&}  becomes \texttt{\%26} ).
+
+\subsection{State Management with Cookies}
+HTTP is a stateless protocol, meaning each request is independent of previous ones.  To maintain state (e.g., remember a user is logged in), cookies are used.
+
+\begin{enumerate}[label=\roman*), itemsep=1pt]
+    \item \textbf{Server Sets Cookies}:  The server sends a `Set-Cookie` header in its HTTP response, instructing the browser to store a cookie.
+    \item \textbf{Browser Sends Cookies}:  The browser then includes the cookie in subsequent requests to the same domain.
+    \item \textbf{Key-Value Pairs}: Cookies are essentially key-value pairs (e.g., \texttt{username=RobertGuderian}).
+    \item \textbf{Domain-Specific}: Cookies are associated with a specific domain.  A browser will send cookies for \texttt{www-test.cs.umanitoba.ca} and all its parent domains (\texttt{cs.umanitoba.ca}, \texttt{umanitoba.ca}).
+\end{enumerate}
+
+\begin{example} {Example of a server setting multiple cookies in its response}
+\begin{lstlisting}
+HTTP/1.1 200 OK
+Set-Cookie: key=value
+Set-Cookie: username=what_they_logged_on_with
+\end{lstlisting}
+Example of a browser sending a cookie to the server:
+\begin{lstlisting}
+GET /something.html HTTP/1.1
+Cookie: key=value; username=what_they_logged_on_with
+\end{lstlisting}
+	
+\end{example}
+The professor showed an example of how the cookies change with different requests to different sites.
+
+\textbf{Security Implications:} Because cookies are stored in the client's browser, they can be modified. It is very important to rely on cookies for client identification, with server-side verification using that session ID. The lecturer showed how easy is to change the cookies using the browser developer tools, so It's very important to keep the state in the server.
+By understanding HTTP requests (GET and POST), headers, and cookies, you can build rich web applications. Cookies allow for state management by identifying clients across multiple requests. However, for secure applications, the actual state (e.g., logged-in status, user data) should be stored on the server, with the cookie serving as an identifier (session ID).
+
+\subsection{Recommended Readings}
+\begin{enumerate}[label=\roman*), noitemsep]
+	\item \href{https://restfulapi.net/http-methods/}{HTTP Methods}
+	\item \href{https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods}{Morilla documentation on HTTP Methods}
+	\item \href{https://www.rfc-editor.org/rfc/rfc9110.html}{HTTP semantics}
+	\item \href{https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages}{Documentation on HTTP messages}
+\end{enumerate}
+
+\endclass{Week 5}

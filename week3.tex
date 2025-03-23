@@ -1,0 +1,228 @@
+\section{Week 3 : Webserver and Sockets}
+\label{sec:week3}
+\subsection{Practical Communication}
+\subsubsection{Unicast }
+A communication method where a message is sent from a single sender to a single receiver.  This is the most common form of communication on the internet for one-to-one interactions.  Think of a direct phone call.
+
+\subsubsection{Multicast}
+A communication method where a message is sent from a single sender to multiple, specific receivers simultaneously.  This differs from broadcast, where the message goes to \textbf{\textit{all}} nodes on the network. Multicast is more efficient for group communication.  An example is a video conference call where only subscribed participants receive the stream.  The Internet Group Management Protocol (IGMP) is commonly used to manage multicast group memberships.
+We communicate over connections.  Connections, particularly in the context of TCP, require state machines to manage the establishment, maintenance, and termination of the communication link.
+
+\subsection{Theoretical Background: State Machines}
+A finite-state machine (FSM) is a mathematical model of computation used to design both computer programs and sequential logic circuits. It is conceived as an abstract machine that can be in one of a finite number of \textit{states}. The machine is in only one state at a time; the state it is in at any given time is called the \textit{current state}. It can change from one state to another when initiated by a triggering event or condition; this is called a \textit{transition}.  A particular FSM is defined by a list of its states, its initial state, and the triggering condition for each transition.
+
+\subsubsection{TCP State Machine} 
+TCP uses an 11-state machine to manage connections. Key states include: \texttt{`LISTEN'}, \texttt{`SYN-SENT'}, \texttt{'SYN-RECEIVED'}, \texttt{`ESTABLISHED'},\texttt{`FIN-WAIT-1'}, \texttt{`FIN-WAIT-2'}, \texttt{`CLOSE-WAIT'}, \texttt{`CLOSING'}, \texttt{`LAST-ACK'}, \texttt{`TIME-WAIT'}, and \texttt{`CLOSED'}. The three-way handshake (\texttt{`SYN'}, \texttt{`SYN-ACK'}, \texttt{`ACK'}) is used to establish a connection (transitioning from \texttt{`CLOSED'} to \texttt{`ESTABLISHED'}).
+
+\subsubsection{UDP (Connectionless)}
+UDP does not maintain a connection in the same way \textit{TCP} does. It's a \texttt{"fire-and-forget"} protocol.  However, applications can implement connection-like behavior on top of \textit{UDP}, adding reliability and ordering if needed (this is often called \texttt{"faking"} a connection, as the underlying transport layer remains connectionless).
+
+\subsection{Blocking vs Non-blocking}
+
+Regardless of the underlying connection (or lack thereof), operations on sockets can be either blocking or non-blocking.  This refers to the behavior of the system call (e.g., \texttt{`send'}, \texttt{`recv'}) made by the application.
+
+
+\subsubsection{Blocking} 
+A blocking operation will pause the execution of the thread (or process) until the operation completes.
+\begin{itemize}
+    \item \textbf{Receive Blocking}: The process waits until data is available to be read from the socket.  For a web server, this is typical behavior: the server blocks on a \texttt{`recv'} call, waiting for a client request.
+    \item \textbf{Send Blocking}: The process waits until the data has been successfully sent (and, in the case of TCP, acknowledged by the receiver).
+\end{itemize}
+\textbf{Theoretical Background:} Blocking operations rely on the operating system's scheduler to suspend the process and wake it up when the I/O operation is complete.  This can be efficient if the process has nothing else to do while waiting, but can lead to wasted resources if the process could be doing other useful work.
+
+\subsubsection{Non-blocking}
+A non-blocking operation will return immediately, even if the operation is not yet complete.
+\begin{itemize}[itemsep=1pt]
+    \item \textbf{Receive Non-blocking}:  The process checks if data is available.  If data is available, it's read; otherwise, the call returns immediately (often with an error code indicating no data was available).  This often requires \textit{polling} -- repeatedly checking the socket for data.
+    \item \textbf{Send Non-blocking}: The process attempts to send the data.  If the send buffer is full, the call may return immediately (again, often with an error code), indicating that the data could not be sent at this time.
+\end{itemize}
+\textbf{Theoretical Background:} Non-blocking operations allow a single thread to handle multiple I/O operations concurrently, improving responsiveness and throughput.  However, they require careful handling of error conditions and often involve more complex programming logic (e.g., using \texttt{select}, \texttt{poll}, or \texttt{epoll} to monitor multiple sockets).
+
+
+\subsubsection{Industry Application} 
+Web servers often use a combination of blocking and non-blocking techniques.  For example, a multi-threaded server might use a blocking `accept` call to wait for new connections, but then handle each connection in a separate thread (which could use blocking or non-blocking I/O).  High-performance servers often use non-blocking I/O and event loops to handle a large number of concurrent connections efficiently.
+
+\subsection{Sockets}
+Sockets provide an abstraction for network communication, allowing applications to send and receive data as if they were reading and writing to a file.
+
+\subsubsection{Theoretical Background: Sockets and the OSI Model}
+The statement mentions layers of the OSI (Open Systems Interconnection) model. It is important to understand that, while conceptual, the OSI model doesn't perfectly map to real-world implementations like TCP/IP. However, it provides a good framework:
+
+\begin{itemize}
+    \item \textbf{Layer 4 (Transport):}  This layer provides end-to-end communication services.  TCP (Transmission Control Protocol) and UDP (User Datagram Protocol) are the two main protocols at this layer. TCP provides reliable, ordered, connection-oriented communication, while UDP provides unreliable, unordered, connectionless communication. When you create a socket, you specify the transport protocol (TCP or UDP).
+    \item \textbf{Layer 5 (Session):} This layer manages the dialogue (session) between communicating applications.  In practice, this layer is often handled within the application itself or combined with the transport layer. Socket APIs often blur the lines between layers 4 and 5.  The "session" can be thought of as the ongoing communication between two processes.
+    \item \textbf{Layer 6 (Presentation):}  This layer is concerned with the format of the data being exchanged.  It handles things like data representation, encryption, and compression.  Examples include converting data to/from JSON, XML, or using encryption like TLS/SSL.
+    \item \textbf{Layer 7 (Application):} This layer is where the application-specific protocols reside (e.g., HTTP, FTP, SMTP).  Your application code, running at this layer, uses the socket API to interact with the lower layers.
+\end{itemize}
+The phrase \textit{\textbf{"Anything"}} can be sent over the sockets refers to the fact that sockets operate on a byte stream, meaning that any kind of information can be converted to a sequence of bytes for transferral.
+
+\subsubsection{Layer 4 Connection}
+This section discusses the two primary transport layer protocols:
+
+\begin{enumerate}
+    \item \textbf{Connection-oriented (TCP)}:
+        \begin{itemize}
+            \item \textbf{Data is ordered}:  TCP guarantees that data will be delivered in the order it was sent.  This is achieved through sequence numbers and acknowledgments.
+            \item \textbf{Reliable}: TCP provides mechanisms for error detection and correction, including checksums, acknowledgments, and retransmissions.  If a packet is lost or corrupted, TCP will automatically retransmit it.
+            \item \textbf{Theoretical Background}: TCP uses a sliding window protocol to manage data flow and ensure reliable delivery.  The window size determines how much data can be sent without waiting for an acknowledgment.
+            \item \textbf{Industry Application}:  TCP is used for most internet applications that require reliable data transfer, such as web browsing (HTTP/HTTPS), file transfer (FTP), email (SMTP), and secure shell (SSH).
+        \end{itemize}
+    \item \textbf{Connection-less (UDP)}:
+        \begin{itemize}
+            \item \textbf{Best Local Route}: UDP packets are routed independently, and there's no guarantee of order or delivery.  Each packet takes the best available route at the time it's sent, which might differ for subsequent packets.
+            \item \textbf{Problematic (depending on application)}: The lack of reliability and ordering can be problematic for applications that require these features.  However, it can be advantageous for applications where speed is more important than reliability, or where occasional packet loss is acceptable.
+            \item \textbf{Theoretical Background}: UDP is a simple protocol with minimal overhead.  It's often used for real-time applications or applications that can tolerate some packet loss.
+            \item \textbf{Industry Application}: UDP is used for applications like DNS (Domain Name System), streaming media (video conferencing, online gaming), and some network management protocols (SNMP).
+        \end{itemize}
+\end{enumerate}
+
+\subsubsection{Layer 5 Communication}
+The statement \texttt{"Everything is files"} is a common Unix/Linux philosophy. It means that many system resources, including devices, pipes, and sockets, are treated as files and can be accessed using standard file I/O operations. This simplifies programming and allows for a consistent interface.  The \texttt{"OS PTSD"} refers to the complexities that can arise when dealing with low-level operating system details.
+
+\subsubsection{Layer 6 Presentation}
+
+This section discusses the different ways data can be represented for transmission over a socket:
+
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Text}:  Plain text data, often encoded using ASCII or UTF-8.
+    \item \textbf{HTML}:  HyperText Markup Language, used for structuring web pages.
+    \item \textbf{Structured Data (JSON, XML)}
+    \begin{itemize}[itemsep=1pt, topsep=1pt]
+		\item \textbf{JSON (JavaScript Object Notation)}: A lightweight data-interchange format that is easy for humans to read and write and easy for machines to parse and generate. A JSON object is essentially a collection of key-value pairs, where keys are strings and values can be primitive types (string, number, boolean, null) or nested JSON objects or arrays. \textit{\textbf{Note}}: While often described as a dictionary, JSON \textit{objects} do not inherently guarantee key order, although many implementations preserve insertion order.
+		\item \textbf{XML (Extensible Markup Language)}:  A markup language that defines a set of rules for encoding documents in a format that is both human-readable and machine-readable.  XML uses tags to define elements and attributes to provide additional information about those elements. XML is more verbose than JSON.  The note's recommendation against XML is a common sentiment, as JSON has largely replaced XML for many applications due to its simplicity and smaller size.
+		\end{itemize}
+
+	\item \textbf{Binary}: Raw binary data, which can represent any type of information.  Binary formats are often more compact and efficient to process than text-based formats, but they are less human-readable and can be more difficult to debug.
+\end{enumerate}
+
+
+\subsubsection{Theoretical Background: Data Serialization}
+Sending data over a network often requires \textit{serialization}, which is the process of converting a data structure or object into a format that can be stored or transmitted and reconstructed later.  JSON, XML, and binary formats are all used for serialization.
+
+\subsection{Socket How-To’s}
+
+\subsubsection{Socket connection types:}
+\begin{enumerate}[noitemsep]
+    \item \texttt{SOCK\_DGRAM} (UDP): Specifies a datagram socket, used for UDP communication.
+    \item \texttt{SOCK\_STREAM} (TCP): Specifies a stream socket, used for TCP communication.
+\end{enumerate}
+
+\subsubsection{Steps}
+\textbf{Server Steps (TCP):}
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Create a socket}: \texttt{socket()} system call.  This creates a new socket and returns a socket descriptor (an integer).  The call takes arguments specifying the address family (e.g., \texttt{AF\_INET} for IPv4, \texttt{AF\_INET6} for IPv6), the socket type (\texttt{SOCK\_STREAM} or \texttt{SOCK\_DGRAM}), and the protocol (usually 0, which lets the system choose the default protocol for the given socket type).
+    \item \textbf{Bind}: \texttt{bind()} system call.  This associates the socket with a specific address and port number on the local machine.  This is like assigning a phone number to a phone.
+    \item \textbf{Listen}: `listen()` system call (TCP only).  This puts the socket into a listening state, waiting for incoming connections.  The argument to `listen` specifies the maximum number of pending connections that can be queued.
+    \item \textbf{Accept}: `accept()` system call (TCP only).  This blocks until a client connects to the server.  When a client connects, `accept` returns a *new* socket descriptor that is used for communication with that specific client. The original listening socket remains open and can accept further connections. This is crucial for handling multiple clients concurrently.
+    \item \textbf{Begin receive and send}:  `recv()` and `send()` system calls (or variants like `recvfrom` and `sendto` for UDP). These are used to receive data from and send data to the connected client.
+\end{enumerate}
+
+\subsubsection{Client Steps (TCP):}
+\begin{itemize}[itemsep=1pt]
+    \item \textbf{Create a socket}: `socket()` system call, similar to the server.
+    \item \textbf{Connect}: `connect()` system call.  This establishes a connection to the server's listening socket.  The arguments specify the server's address and port number.  This initiates the TCP three-way handshake.
+    \item \textbf{Begin send and receive}: `recv()` and `send()` system calls, similar to the server.
+\end{itemize}
+
+\subsubsection{TCP vs. UDP (Order of Operations)}
+\begin{enumerate}[itemsep=1pt]
+	\item TCP: The order of `send` and `receive` operations can be interleaved; the connection is full-duplex.
+	\item UDP: Since UDP is connectionless, there is no `connect` or `accept`. The server typically binds to a port and then uses `recvfrom` to receive data, which also provides the sender's address. The server can then use `sendto` to send a response to that address.
+\end{enumerate}
+
+\begin{lstlisting}[language=python,caption=Creating a socket in Python]
+import socket
+
+# Create a TCP socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to a server
+
+s.connect(("someserver.com", 200))  # Replace with actual server and port
+s.sendall(b'Blast a message') # Send data (encode the string to bytes)
+data = s.recv(1024)# Receive data (up to 1024 bytes)
+print(data.decode("utf-8")) # Decode the received bytes to a string
+
+s.close() # Close the socket (important!)
+\end{lstlisting}
+
+The socket API is a set of functions provided by the operating system that allows applications to create and use sockets.  The API is typically similar across different operating systems, making it relatively portable.
+
+\subsubsection{Questions:}
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Is the session layer just for opening and closing sockets?}  No, the session layer is more than just opening and closing. It encompasses managing the dialogue between applications. While socket creation and destruction are part of establishing and terminating a session, the session layer also concerns itself with things like checkpointing, recovery, and potentially authentication and authorization. In many practical implementations, these functionalities are often intertwined with or handled directly by the application layer or are implicitly managed within the transport layer (especially with TCP).
+
+    \item \textbf{What is the difference between flooding (closely and loosely connected)?}  "Flooding" isn't a standard term directly related to sockets in the context of the OSI model layers we've discussed. However, it likely refers to network flooding techniques.  In a *closely connected* network (e.g., a local area network), flooding might involve sending packets to all nodes on the network, potentially overwhelming the network.  In a *loosely connected* network (e.g., the internet), flooding is typically associated with denial-of-service attacks, where a large number of packets are sent to a target, consuming its resources and preventing legitimate users from accessing it. The concept doesn't map directly to a specific socket operation, but rather describes a *use* (or misuse) of network communication.
+
+    \item \textbf{When is binary format better than JSON and XML?} Binary formats are generally preferred over JSON and XML when:
+        \begin{itemize}
+            \item \textbf{Performance is critical:} Binary formats are typically smaller and faster to parse than text-based formats like JSON and XML. This is because they don't require character encoding/decoding and often have a more compact representation.
+            \item \textbf{Bandwidth is limited:} Smaller message sizes translate to less data transmitted over the network, which is crucial in environments with limited bandwidth.
+            \item \textbf{Storage space is a concern:} Binary formats generally require less storage space.
+            \item \textbf{Data types are complex:} Binary formats can directly represent complex data types without the need for custom serialization/deserialization logic, which might be required with JSON or XML.
+        \end{itemize}
+        However, binary formats are less human-readable and can be more difficult to debug.  The choice between binary and text-based formats depends on the specific requirements of the application.
+\end{enumerate}
+
+\subsection{Practical Communication (In Class)}
+Sockets fundamentally transmit data as a stream of bytes (binary data). Encoding schemes like JSON, XML or custom binary formats are used on top of the socket layer.
+
+\textbf{Serialization}: Converting an object (in memory) into a byte stream (or a string representation like JSON) so it can be sent over a network or stored. The reverse process is called deserialization.
+
+\href{https://docs.python.org/3/library/json.html#json.JSONDecoder}{Python JSON Documentation}
+
+\subsection{Flattening}
+
+"Flattening" refers to the process of converting a complex data structure (like a tree, graph, or object with nested objects) into a linear representation suitable for transmission or storage.
+
+\subsubsection{Challenges with Encoding}
+\begin{enumerate}[label=\roman*), itemsep=1pt]
+    \item \textbf{Circular Linked Lists:}  A circular linked list (where the last node points back to the first node) cannot be directly serialized using simple techniques because the serialization process would enter an infinite loop.
+    \item \textbf{File-like Objects:}  File-like objects (objects that represent open files, network connections, or other I/O resources) typically cannot be serialized directly because they represent a *handle* to a resource, not the resource's data itself.  You can't serialize the *state* of an open file or network connection in a meaningful way.
+\end{enumerate}
+
+\textit{\textbf{\large{Solutions}}}
+
+\begin{itemize}
+    \item \textbf{Metadata:}  Provide additional information (metadata) to describe the structure of the data.  For example, you could represent a circular linked list by identifying the starting node and indicating the circular relationship explicitly.
+    \item \textbf{Specialized Encoding:} Use encoding schemes specifically designed to handle complex data structures.  For example, graph serialization libraries can handle circular references and other complex relationships. For file-like objects, you might serialize the *data* contained in the file, rather than the file handle itself.
+\end{itemize}
+
+\subsection{Multicast}
+Multicast is a network addressing method where data is sent to a \textit{group} of destination computers simultaneously in a single transmission from the source.
+
+\subsubsection{Uses of UDP Multicast:}
+
+\begin{itemize}
+    \item \textbf{DDoS (Distributed Denial of Service) Attacks}: Multicast can be exploited to amplify DDoS attacks, where a small number of attackers can send requests to a multicast group, causing all members of the group to respond to the victim, overwhelming it.
+    \item \textbf{Live Feeds}:  Video and audio streaming to multiple recipients simultaneously (e.g., live sports events, online lectures).
+    \item \textbf{Notifications}:  Sending notifications to a group of subscribers (e.g., stock price updates, news alerts).
+    \item \textbf{Game State Updates}:  Multiplayer online games often use multicast to distribute game state updates to all players efficiently.
+\end{itemize}
+
+\subsubsection{Limitations of UDP Multicast:}
+
+\begin{itemize}
+    \item \textbf{Unknown Receiver Status}:  The sender doesn't know which receivers have successfully received the data (no acknowledgments in UDP).
+    \item \textbf{Unordered Packets}:  UDP doesn't guarantee packet order.
+    \item \textbf{Packet Loss}:  UDP is unreliable; packets can be lost in transit.
+\end{itemize}
+
+\subsubsection{Theoretical Background: IP Multicast}
+IP multicast uses a special range of IP addresses (Class D addresses: \texttt{224.0.0.0} to \texttt{239.255.255.255}). Hosts join multicast groups using the Internet Group Management Protocol (IGMP). Routers use multicast routing protocols (e.g., PIM - Protocol Independent Multicast) to forward multicast traffic efficiently.
+
+
+\subsection{Questions on TCP and UDP}
+\textbf{Why do most ports and protocols use TCP?}\\
+TCP's reliability (guaranteed delivery, ordering, error detection and correction) is crucial for many applications.  Most applications prioritize data integrity over speed.\\\\
+\textbf{Why does NTP not use TCP?} \\
+NTP (Network Time Protocol) is designed to synchronize clocks across a network. Accuracy and low latency are paramount.
+
+\begin{itemize}
+  \item \textbf{Time-sensitive}:  TCP's overhead (connection establishment, retransmissions) can introduce unpredictable delays, which would negatively impact the accuracy of time synchronization.
+    \item \textbf{Operates like live streaming}:  NTP doesn't need to retransmit lost packets.  A slightly older time update is better than waiting for a retransmitted, but potentially much older, packet.  It's similar to live streaming, where occasional packet loss is acceptable, but low latency is essential.
+    \item \textbf{Theoretical Background:} NTP uses a hierarchical system of time servers, with highly accurate atomic clocks at the top (Stratum 0).  Clients synchronize with servers at lower strata.  The protocol uses statistical algorithms to filter out network jitter and estimate the round-trip delay.
+\end{itemize}
+
+\endclass{Week 3}

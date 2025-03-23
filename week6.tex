@@ -1,0 +1,235 @@
+\section{Week 6 : Introduction to Client-Side Web Computing}
+Much of modern computing is done in-browser, a popular way to distribute applications. This approach has pros and cons, creating "chubby clients" (more processing on the client-side). It approaches, but doesn't fully reach, the capability of a "thick client" (stand-alone application). Still relies on a web server to fetch files.
+
+In this implementation web server has endpoints for API. And each endpoint is running on an individual thread. When the client is reaching out to '/' root endpoint and that will return the website with CSS and JS. If the client reaches out any other implemented endpoint, then a thread gets spun up and that task is performed. 
+
+
+\subsection{Key Technologies for Client-Side Web Interaction}
+\subsubsection{Forms (HTML Forms)}
+A traditional (though slightly outdated) way to interact with servers. Have fields (for input) and actions (what happens when submitted). Uses submit button.
+\begin{itemize}
+    \item \textbf{Action attribute} specifies the web page to be fetched when form is submitted.
+    \item \textbf{Method} can be \texttt{put}, \texttt{post}, \texttt{delete}, or \texttt{get}.
+\end{itemize}
+
+
+\begin{example}{Example of a form submit onAction}
+\textbf{Example:} A simple form with "Name of poster" and "The message" fields, and a "go" (submit) button.
+\end{example}
+
+The instructor demonstrates inspecting the form's HTML using the browser's developer tools. The form's \texttt{action} attribute is \texttt{newnote.cgi}, which uses a Common Gateway Interface (CGI) script. This is code on the server. The server in this case is Apache.
+The form's \texttt{method} is set to \texttt{"POST."} This means data is sent in the body of the HTTP request. The "Network" tab of the developer tools shows the request and response, including the "200 OK" status and the "POST" method. The "Payload" tab shows the data sent: \texttt{name=Robert+Guderian\&message=test}. This is URL-encoded.
+
+\subsection{Single Page Application}
+This is built using AJAX (Asynchronous JavaScript and XML). That mean we do no request the whole HTML, instead we request the small missing information to fill that data field. AS a result of it, it doesn't require reloading the page and let the work be done in the JavaScript. 
+
+\subsection{XHR (XMLHttpRequest)}
+Allows making requests "behind the scenes" without reloading the entire page. XHR is used to update the DOM (Document Object Model), which represents the structure of the HTML page. The "XML" part of the name is becoming less relevant; JSON is more common now. Has callbacks (asynchronous functions) that run when certain events occur (like the request completing). Look at the \texttt{example.html} code.
+
+\begin{lstlisting}[language=html,caption=HTML]
+<html>
+<head>
+<script> 
+	function doneBeenClicked() { 
+		function loadedEventCallback () {
+          alert(oReq.responseText);
+        }
+
+        function loadedEventCallback2 () {
+          var theData = JSON.parse(oReq.responseText);
+          
+          var theDiv = document.getElementById("fillHere");
+          //theDiv.innerText = theData.someKey;
+          theDiv.innerHTML= "<h1>" + theData.someKey +"</h1>";
+
+        }
+        
+        // basis from
+        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+        // probably will not work from localhost!
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", loadedEventCallback2);
+        // a static page we have access to
+        oReq.open("GET", "./simple.json");
+        oReq.send();
+	}
+</script>
+</head>
+<body>
+    <button type="button" onClick='doneBeenClicked()'>Do it!</button>
+    <div id='fillHere'>Stuff will go here.</div>
+</body>
+</html>	
+\end{lstlisting}
+
+\begin{itemize}[noitemsep, topsep=4pt]
+        \item \verb|oReq = new XMLHttpRequest();| creates the request object.
+        \item \verb|oReq.addEventListener("load", loadedEventCallback2);| sets up a callback function to run when the request loads.
+        \item \verb|oReq.open("GET", "./simple.json");| specifies the request method (GET) and the URL.
+        \item \verb|oReq.send();| sends the request.
+\end{itemize}
+\texttt{\large{LoadedEventCallback2}} function:
+\begin{itemize}[noitemsep, topsep=4pt]
+        \item Parses the JSON response: \verb|var theData = JSON.parse(oReq.responseText);|
+        \item Gets a DOM element by its ID: \verb|var theDiv = document.getElementById("fillHere");|
+        \item Changes the inner HTML of the element: \verb|theDiv.innerHTML = theData.someKey;|
+\end{itemize}
+He also shows how the "inner text" command can be changed to "inner HTML" to create an h1 tag.
+ Clicking the "Do it!" button triggers the XHR request, fetches the JSON, and updates the page content without a full reload.
+
+\subsection{DOM (Document Object Model)}
+The Document Object Model (DOM) serves as a crucial Application Programming Interface (API) that allows programs to interact with the structure of HTML and XML documents.  Fundamentally, the DOM represents a document as a tree-like hierarchy, often referred to as the DOM tree, where every element, attribute, and piece of text within the document is treated as a distinct node in this tree.  This tree representation enables dynamic manipulation of web page content, most notably through JavaScript.  By providing programmatic access to the DOM tree, JavaScript can dynamically create new nodes, modify existing ones, move elements within the structure, and generally alter the content and presentation of a web page in response to user actions or data updates, which is essential for building interactive and dynamic web applications within distributed systems.
+
+
+\subsection{Cookies}
+Cookies provide a mechanism for maintaining client-side state in web applications. It is crucial capability where interactions are inherently stateless. Primarily, cookies are employed to remember user-specific information across multiple HTTP requests, enabling functionalities like persistent logins, the storage of user preferences, and, controversially, user tracking for targeted advertising. These small pieces of data are set by the server in the \texttt{Set-Cookie} header of HTTP responses. Once set, the browser automatically and persistently includes these cookies in the headers of all subsequent requests directed to the same domain or its subdomains. Cookies sent by the server can be observed in response headers, such as within a "messages" field which, in the example provided, contained a numerical identifier.  While the presenter will later elaborate on the role of cookies in website performance optimization, it's important to understand that cookies are a cornerstone of client-side state management, enabling personalized and persistent user experiences in distributed web environments despite the underlying stateless nature of the HTTP protocol. \\\\
+
+% ---------------- Diagram ---------------------
+%\begin{tikzpicture}[
+%    node distance = 2cm,  %  Distance between nodes
+%    block/.style = {draw, rectangle, rounded corners, minimum width=1.5cm, minimum height=1cm, text centered}, % Style for blocks
+%    arrow/.style = {thick, ->, >=Stealth} % Style for arrows
+%]
+%\node (browser) [block] at (0,0) {Web Browser};% Draw the browser
+%\draw[arrow] (browser) -- node[above, midway] {\scriptsize{cookie}} node[below, midway] {\scriptsize{id 7}} (3.8,0);% Draw the arrow for cookie ID
+%\node (webserver) [block, right of=browser, xshift=3cm] {Web Server};
+%\draw[arrow] (webserver) -- node[below, midway] {} (browser); % Draw the arrows for requests
+%\node (database) [block, below of=webserver, yshift=-1.5cm] {Database};% Draw the databas
+%\node (table) [draw, right of=database, xshift=1.5cm] {% Draw the table inside the database
+%    \begin{tabular}{|c|c|}
+%        \hline
+%        id & isLoggedIn \\
+%        \hline
+%        7 & T \\
+%        \hline
+%    \end{tabular}
+%};
+%\draw[arrow] (webserver) -- node[below, midway] {} (database);% Draw the arrow for cookie ID
+%\end{tikzpicture}
+%\\\\
+The web browser send a request cookie that contains the unique ID for the client. The web server accepts this cookie and validated if the userIsLogged in the system. This is done by having a state stored on a database, the information is extracted in $\mathcal{O}(1)$ time. If the stored value for is \texttt{TRUE}, then show the contents of the page. If the stored value is \texttt{FALSE}, then prompt a login page. 
+
+\subsubsection{Cookies and State}
+We can set the cookies to expire, in case where we want to forget the user. There are 2 two ways to do this. 
+
+\begin{itemize}[noitemsep, topsep=4pt]
+	\item Set the expiry date to the past date 
+        \item Set the expiry at the current time, the cookie will expire in a second. 
+\end{itemize}
+
+\begin{lstlisting}[language=html,caption=Set cookie to expire]
+Set-Cookie:<cookie-name>=<cookie-value>; Expires=<date> 
+Set-Cookie:username=Rob; Expires=Wed, 21 Oct 2025 07:28:00 GMT 
+\end{lstlisting}
+
+\subsection{Server-Side Web Computing}
+
+The lecture shifts focus to server-side web computing. It emphasizes the importance of organizing the server in a meaningful and usable way for clients.
+
+\subsection{REST (Representational State Transfer)}
+
+REST (Representational State Transfer) is introduced as a key concept for organizing web servers in modern web development. It focuses on the semantic meaning of HTTP verbs such as GET, POST, PUT, DELETE, and others. REST provides a more intuitive path structure compared to traditional methods.
+
+\begin{itemize}[noitemsep, topsep=4pt]
+	\item \textbf{GET} : This will get an response from the server, depending upon the parameters passed, Example: GET /user/11
+	\item \textbf{POST} : Post request will make a new post. For instance, making a post using the Twitter API.
+	\item \textbf{PUT} : This would update the information. For Example: update the name for the username
+	\item \textbf{DELETE} : This will delete the item requested by the user.
+\end{itemize}
+
+\begin{example}{CGI $\rightarrow$ REST API}
+\textbf{Example:} Instead of using a parameterized URL like \texttt{myScript.cgi?user=11\&getItem=firstname}, a RESTful path would be structured as \texttt{/user/11/firstname}. This RESTful path clearly indicates the resource being accessed (user), the identifier of the resource (11), and the specific attribute being requested (firstname).
+\end{example}
+
+\subsubsection{API Design for AURORA}
+Imagine we have an oppurtunity to rewrite Aurora with a RESTful API.  Design the route for AURORA. 
+\begin{itemize}[noitemsep]
+	\item Login : \texttt{POST /api/v1/auth/} and the body of the HTTP request
+		\begin{enumerate} [label=\alph*., noitemsep] % Use enumerate for sub-items
+            \item JSON with username and password
+            \item cookie
+        \end{enumerate}
+	\item List Courses \texttt{GET api/v1/courses} and pass the parameter for the seach in the JSON Body.
+	\item View a course \texttt{GET api/v1/courses/crnid}
+	\item Register for a course \texttt{POST api/v1/courses/register/crnid} and send the cookie 
+\end{itemize}
+
+\subsubsection{Twitter API Example}
+
+The Twitter developer platform is provided as a practical example of RESTful API design. Here are some Twitter API endpoints that illustrate REST principles:
+
+\paragraph{Tweets:}
+\begin{itemize}[noitemsep, topsep=4pt]
+    \item \texttt{DELETE /2/users/:id/bookmarks/:tweet\_id}
+    \item \texttt{GET /2/users/:id/bookmarks}
+    \item \texttt{POST /2/users/:id/bookmarks}
+\end{itemize}
+
+\paragraph{Filtered stream:}
+\begin{itemize}[noitemsep, topsep=4pt]
+    \item \texttt{GET /2/tweets/search/stream}
+    \item \texttt{GET /2/tweets/search/stream/rules}
+    \item \texttt{POST /2/tweets/search/stream/rules}
+\end{itemize}
+
+\paragraph{Hide replies:}
+\begin{itemize}[noitemsep, topsep=4pt]
+    \item \texttt{PUT /2/tweets/:id/hidden}
+\end{itemize}
+
+\paragraph{Likes:}
+\begin{itemize}[noitemsep, topsep=4pt]
+    \item \texttt{DELETE /2/users/:id/likes/:tweet\_id}
+    \item \texttt{GET /2/users/:id/likes/:tweet\_id}
+    \item \texttt{GET /2/users/:id/liking\_users}
+    \item \texttt{GET /2/users/:id/liked\_tweets}
+    \item \texttt{POST /2/users/:id/likes}
+\end{itemize}
+
+\subsubsection{Key Takeaways about REST}
+
+There are several key takeaways regarding RESTful architecture. Firstly, REST utilizes intuitive paths that clearly represent resources and their identifiers, making APIs easier to understand and use. Secondly, a single path, such as \texttt{/user/11}, can be used with different HTTP verbs to perform various actions on that resource. For instance, \texttt{GET} would be used to fetch user information, \texttt{PUT} to update user details, and \texttt{DELETE} to remove the user. Lastly, Twitter's API serves as a real-world example of a system that effectively employs RESTful principles in its design.
+
+\subsection{CGI Scripts}
+During the lecture, it was noted that the presenter is using a UNIX system and is logged in as user \texttt{rogb}. Accessing their environment allows for demonstration of system settings.  CGI is an acronym for Common Gateway Interface. The server-side code examples used in the lecture are implemented in Python. For demonstrating and testing API calls, the presenter is using the software Insomnia.
+
+\begin{lstlisting}[language=python,caption=CGI script]
+#!/usr/bin/python3
+import sys
+import os 
+
+print('''Content-type: text/text
+
+{:}'''.format(dict(os.environ)))
+\end{lstlisting}
+
+\vspace{1em}
+
+%\begin{tikzpicture}[
+%    node distance=6cm,
+%    boxnode/.style={rectangle, draw, align=center, align=center, inner xsep=12pt, inner ysep=8pt}, % Style for box nodes
+%    >=Stealth
+%]
+%    \node (wb) [boxnode, label=above:WB] {Web\\Browser};
+%    \node (ws) [boxnode, right of=wb, label=above:WS] {Web\\Server};
+%    \node (cgi) [boxnode, right of=ws, node distance=6cm, label=right:path.cgi] {CGI\\Script};
+%    
+%    \draw[->, thick, exampleblue] (wb) -- (ws) node[midway, above, draw=none, fill=none, color=exampleblue] {1. GET /path.cgi};
+%    \draw[->, thick, tokyonight-bluesubsub] (ws) -- (cgi) node[midway, above, draw=none, fill=none, color=tokyonight-bluesubsub] {2. Runs the file};
+%\end{tikzpicture}
+\vspace{1em}
+
+The CGI script notifies the server that something needs to run. The SGI script is going to run python.
+The CGi scripts need to be add the content type since it can return anything, the user/programmer needs to specify it. The browser handles the rest of the it including the date, content-length.
+
+We can do anything with CGI ? basically anything as long as it complies with HTTP protocol (not necessarly strictly). But it doesn't work well with REST API.
+
+\subsection{Recommended Readings}
+\begin{itemize}[noitemsep]
+	\item \href{https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST}{Documentation on Post}
+	\item \href{https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies}{Documentation on Cookie}
+	\item  \href{https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest}{XMLHttp}
+	\item  \href{https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API/Using_XMLHttpRequest}{Documentation on using XMLHttpRequest}
+\end{itemize}
+
+\endclass{Week 6}

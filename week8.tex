@@ -1,0 +1,94 @@
+\section{Week 8 : Elections}
+
+\subsection{Coordinators}
+Many peer-to-peer algorithms require a coordinator. This coordinator manages the system and simplifies algorithm design. If a coordinator goes offline we can choose a new one.
+
+\subsection{Bully Algorithm}
+The Bully algorithm is a method for electing a leader in a distributed system. The basic principle is that the node with the highest unique ID (sometimes referred to as process ID) becomes the leader.
+
+\noindent Assume a network of five homogeneous hosts.
+\begin{enumerate}[label=\roman*), noitemsep, topsep=1pt]
+\item Each host is assigned a unique ID.
+\item Hosts are aware of other hosts in the network.
+\item If a host does not hear from a coordinator in an expected timeout it may try sending a message to the coordinator.
+\item If the coordinator is offline (fails to respond within a timeout period), a host initiates an election.
+\item The host will broadcast an \texttt{"I'm the boss"} message, including its ID, to all known hosts.
+\begin{enumerate}[label=\roman*), noitemsep]
+\item Each node in the network has a unique ID which serves as its priority (higher ID equals higher priority).
+\item If a host receives an \texttt{"I'm the boss"} message and it has a higher priority, it broadcasts its own \texttt{"I'm the boss"} message with its ID.
+\end{enumerate}
+\item The highest priority host that gets no objections during a timeout is considered the leader.
+\end{enumerate}
+
+
+
+\begin{minipage}{0.65\textwidth} % Left side (text)
+    Suppose node 2 is the initiator of the election, the messages may appear as shown in Table 2:
+    
+    The efficiency of the Bully algorithm can vary. In the worst-case scenario, there could be $n^2$ messages where $n$ is the number of hosts. The minimal amount of messages would be $n-1$, in the case where no other hosts sends a reply back.
+
+\end{minipage}%
+\hfill % Adds space between the two sections
+\begin{minipage}{0.3\textwidth} % Right side (table)
+    \centering
+    \begin{tabularx}{\textwidth}{@{} >{\RaggedRight\arraybackslash}X | >{\RaggedRight\arraybackslash}X @{}}
+        \toprule
+        Node & Unique ID \\
+        \midrule
+        1 & 10 \\
+        2 & 5 \\
+        3 & 4 \\
+        4 & 3 \\
+        5 & 2 \\
+        \bottomrule
+    \end{tabularx}
+    \captionof{table}{Bully Algorithm Table}
+    \label{tab:bully-algo-table}
+\end{minipage}
+
+\subsection{Ring Algorithm}
+The Ring algorithm is another approach to leader election, particularly useful when nodes don't need to know all other peers in the network, only their successor and predecessor. Assume nodes arranged in a logical ring. Each node (peer) has a priority and maintains a vector of $k$ elements, tracking the priorities of other nodes. When a node initiates an election, it sends an election message, \{$i$, $P_i$\}, to its successor, where $i$ is the node's index and $P_i$ is its priority. Upon receiving an election message, a node:
+\begin{enumerate}[label=\roman*), itemsep=1pt, topsep=2pt]
+\item Records the priorities in its vector.
+\item Prepends its priority to the message and forwards it.
+\end{enumerate}
+
+\begin{example}{Ring Algorithm Explanation}
+\begin{minipage}{0.65\textwidth} % Left side (text)
+    Suppose node 2 is the initiator of the election. The table on the right is the index $i$ of the node and the corresponding $P_i$ for the $i^{th}$ node. The messages may appear as follows:
+    
+    \begin{enumerate}[label=\roman*), noitemsep, topsep=1.5pt]
+        \item Node 2 sends \{2:5\}
+        \item Node 3 adds its information and sends \{3:4, 2:5\}
+        \item Node 4 adds its information and sends \{4:3, 3:4, 2:5\}
+        \item Node 5 adds its information and sends \{5:2, 4:3, 3:4, 2:5\}
+        \item Node 1 adds its information and sends \{1:10, 5:2, 4:3, 3:4, 2:5\}
+    \end{enumerate}
+\end{minipage}
+\hfill % Adds space between the two sections
+\begin{minipage}{0.3\textwidth} % Right side (table)
+    \centering
+    \begin{tabularx}{\textwidth}{@{} >{\RaggedRight\arraybackslash}X | >{\RaggedRight\arraybackslash}X @{}}
+        \toprule
+        Node & Unique ID \\
+        \midrule
+        1 & 10 \\
+        2 & 5 \\
+        3 & 4 \\
+        4 & 3 \\
+        5 & 2 \\
+        \bottomrule
+    \end{tabularx}
+    \captionof{table}{Ring Algorithm Table}
+    \label{tab:ring-algo-table}
+\end{minipage}
+\end{example}
+
+\begin{itemize}[itemsep=1pt]
+\item When a node receives its own election message back, it can determine the coordinator by identifying the highest priority in the accumulated vector.
+\item The message circulation ensures that all nodes have consistent information about node priorities.
+\end{itemize}
+
+\subsubsection*{Implementation Details}
+The ring algorithm is a more structured approach to leader election, reducing some of the message overhead compared to broadcast-heavy methods like the Bully algorithm. However, its message complexity is still $O(n^2)$ in the worst case, where $n$ is the number of nodes
+\endclass{Week 8}
