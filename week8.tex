@@ -20,14 +20,12 @@ The Bully algorithm is a method for electing a leader in a distributed system. T
 \item The highest priority host that gets no objections during a timeout is considered the leader.
 \end{enumerate}
 
-
-
 \begin{minipage}{0.65\textwidth} % Left side (text)
     Suppose node 2 is the initiator of the election, the messages may appear as shown in Table 2:
     
     The efficiency of the Bully algorithm can vary. In the worst-case scenario, there could be $n^2$ messages where $n$ is the number of hosts. The minimal amount of messages would be $n-1$, in the case where no other hosts sends a reply back.
 
-\end{minipage}%
+\end{minipage}
 \hfill % Adds space between the two sections
 \begin{minipage}{0.3\textwidth} % Right side (table)
     \centering
@@ -47,7 +45,7 @@ The Bully algorithm is a method for electing a leader in a distributed system. T
 \end{minipage}
 
 \subsection{Ring Algorithm}
-The Ring algorithm is another approach to leader election, particularly useful when nodes don't need to know all other peers in the network, only their successor and predecessor. Assume nodes arranged in a logical ring. Each node (peer) has a priority and maintains a vector of $k$ elements, tracking the priorities of other nodes. When a node initiates an election, it sends an election message, \{$i$, $P_i$\}, to its successor, where $i$ is the node's index and $P_i$ is its priority. Upon receiving an election message, a node:
+The Ring algorithm is another approach to leader election, particularly useful when nodes don't need to know all other peers in the network, only their successor and predecessor. Assume nodes arranged in a logical ring. Ring is simple datastructure and ordering since the message comes back to the initiator. Each node (peer) has a priority and maintains a vector of $k$ elements, tracking the priorities of other nodes. When a node initiates an election, it sends an election message, \{$i$, $P_i$\}, to its successor, where $i$ is the node's index and $P_i$ is its priority. Upon receiving an election message, a node:
 \begin{enumerate}[label=\roman*), itemsep=1pt, topsep=2pt]
 \item Records the priorities in its vector.
 \item Prepends its priority to the message and forwards it.
@@ -55,7 +53,7 @@ The Ring algorithm is another approach to leader election, particularly useful w
 
 \begin{example}{Ring Algorithm Explanation}
 \begin{minipage}{0.65\textwidth} % Left side (text)
-    Suppose node 2 is the initiator of the election. The table on the right is the index $i$ of the node and the corresponding $P_i$ for the $i^{th}$ node. The messages may appear as follows:
+    Suppose node 2 is the initiator of the election. The table on the right is the index $i$ of the node and the corresponding $P_i$ for the $i^{th}$ node. The messages may appear as follows: 
     
     \begin{enumerate}[label=\roman*), noitemsep, topsep=1.5pt]
         \item Node 2 sends \{2:5\}
