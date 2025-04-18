@@ -226,7 +226,7 @@ Message passing is crucial for designing and implementing distributed systems. C
 \begin{enumerate}
     \item \textbf{Push:}
     \begin{enumerate}[itemsep=0.5pt,topsep=0pt]
-        \item \textit{Description:} Announcements where data is sent to peers without expecting a direct response. It's a one-way message, like a notification that might say, \texttt{"I am here."}
+        \item \textit{Description:} Announcements where data is sent to peers without expecting a direct response. It's a one-way message, like a notification that might say, \texttt{I am here.}
         \item \textit{Example:} A laptop sending a one-way message to a server, which might then do things but does not need to reply.
         \item \textit{Use Case:} Typically used in peer-to-peer problems where a response might not be necessary. An example is using \texttt{DHCP} and \texttt{multicast DNS}.
         \item \textit{Technical Considerations:} Often implemented with protocols like \textit{UDP}, where delivery is not guaranteed.

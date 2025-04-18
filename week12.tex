@@ -1,0 +1,170 @@
+\section{Week 12 - Clocks}
+
+\subsection{The Problem of Time in Distributed Systems}
+
+\subsubsection{Complexity of Time}
+The concept of time within distributed systems is significantly more complex than it initially appears. Unlike a single system, there isn't one universal clock that all components inherently agree upon. Determining the order of events across multiple, potentially geographically dispersed machines presents unique challenges. Time, in this context, is often considered an "invention" or construct we need to manage carefully.
+
+\subsubsection{Need for Event Ordering}
+In many distributed applications, particularly those involving shared state like databases or key-value stores, it's crucial to know the order in which events occurred. For example, if two updates for the same data item arrive at different nodes around the same time, the system needs a consistent way to decide which update is the "latest" or "true" one. Different nodes might receive messages in different orders due to network latency, leading to potential inconsistencies if not handled properly. Establishing a reliable event order is fundamental for maintaining consistency.
+
+\subsubsection{Challenges with Global Clocks (NTP)}
+A seemingly straightforward solution is to synchronize all machine clocks using a global time source like the Network Time Protocol (NTP) or GPS satellites.
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item \textbf{Clock Drift:} Physical clocks on commodity hardware rely on quartz crystal oscillators. These crystals are imperfect and cause clocks to drift at slightly different rates over time. Even if synchronized initially, they will eventually diverge.
+    \item \textbf{Accuracy Limitations:} NTP synchronization itself has limitations. While it attempts to compensate for network latency using complex algorithms, it cannot guarantee perfect, instantaneous synchronization across all nodes, especially at the microsecond level often required. Factors like network path variability introduce inaccuracies.
+    \item \textbf{Fundamental Limits (Nature of Spacetime):} At a very fundamental level, the concept of absolute simultaneity is challenged by the principles of physics (relativity, speed of light limits), making perfect global time an idealization rather than a practical reality for fine-grained ordering.
+    \item \textbf{Overhead:} Constantly querying NTP servers to maintain tight synchronization introduces network traffic and processing overhead.
+\end{enumerate}
+While NTP is useful for coarse-grained synchronization, it's often insufficient for the precise event ordering needed in many distributed algorithms.
+
+\subsection{Logical Clocks and Relative Time}
+
+\subsubsection{Focus on Relative Time}
+Instead of relying on potentially inaccurate and drifting wall-clock time (absolute time), distributed systems often shift focus to \textit{relative time}. The primary concern is not the exact moment an event occurred according to a universal clock, but rather the causal relationship between events: did event A happen before event B, or could they have happened independently (concurrently)?
+
+\subsubsection{Introduction to Logical Clocks}
+Logical clocks provide a mechanism to capture these causal relationships without depending on synchronized physical clocks. They assign sequence numbers (timestamps) to events based on the flow of information within the system.
+
+\subsubsection{Lamport Clocks}
+The Lamport clock (or Lamport timestamp) is a fundamental type of logical clock designed by Leslie Lamport. It allows for establishing a partial order of events in a distributed system.
+
+\subsection{The "Happened-Before" Relation}
+
+\subsubsection{Definition}
+The core concept underpinning Lamport clocks is the "happened-before" relation, denoted as \( \rightarrow \). It defines a partial order on events:
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item If A and B are events in the same process, and A occurs before B, then \( A \rightarrow B \).
+    \item If A is the sending of a message by one process and B is the receipt of the same message by another process, then \( A \rightarrow B \).
+    \item If \( A \rightarrow B \) and \( B \rightarrow C \), then \( A \rightarrow C \) (transitivity).
+\end{enumerate}
+Two events A and B are considered \textit{concurrent} if neither \( A \rightarrow B \) nor \( B \rightarrow A \) holds.
+
+\subsubsection{Establishing Order via Messages}
+Messages act as the carriers of causal information. When a process receives a message, it learns about events that happened before the message was sent. This allows relating events across different processes. These message send/receive pairs act as "rendezvous" points, synchronizing the logical time between involved processes to some extent.
+
+\subsection{Lamport Timestamp Algorithm}
+
+\subsubsection{Core Rule}
+Each process \( P_i \) maintains a local logical clock counter \( C_i \), initialized to 0.
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item Before executing a local event (not a message send/receive), process \( P_i \) increments its clock: \( C_i := C_i + 1 \).
+    \item When process \( P_i \) sends a message \( m \), it first increments its clock \( C_i := C_i + 1 \) and then includes the timestamp \( C_i \) with the message, \( \text{send}(m, C_i) \).
+    \item When process \( P_j \) receives a message \( (m, C_i) \) from \( P_i \), it updates its own clock using the rule: \( C_j := \max(C_j, C_i) + 1 \). Then it processes the event associated with receiving \( m \).
+\end{enumerate}
+This ensures that the timestamp of the message receipt event is always greater than the timestamp of the message send event, and also greater than any previous event on the receiving process.
+
+\subsubsection{Message Passing and Timestamp Updates}
+The timestamp included in a message effectively carries information about the sender's logical time up to that point. The receiver uses this information, along with its own local clock, to advance its logical time ensuring causality is respected.
+
+
+\subsubsection{Demonstration: Three Hosts Example}
+
+\begin{example}{Lamport Timestamp Updates}
+Consider three hosts: $H_0$, $H_1$, $H_2$. Time progresses left‑to‑right.
+Timestamps denote the logical clock value \emph{after} each event.
+Arrows represent messages carrying the send‑timestamp.
+
+\begin{itemize}[noitemsep]
+    \item Each process increments its clock for local events or before sending.
+    \item When receiving a message with timestamp \( C_{received} \), the receiver updates its clock \( C_{local} \) to \( \max(C_{local}, C_{received}) + 1 \).
+    \item The arrows establish the "happened-before" (\( \rightarrow \)) relation. For example, event $h_0^{e_2}$ \( \rightarrow \) $h_1^{e1}$.
+    \item Events not connected by a path of arrows and process steps are concurrent. For example, event $h_0^{e4}$ (timestamp 4) on $H_0$ and event $h_{2}^{e_2}$(timestamp 5) on $H_2$ might appear ordered by timestamp, but are actually concurrent because $H_0 \rightarrow H_2$ message (ts=4) arrives \textit{after} $H_2$ reaches timestamp 5. The clock value increases, but there's no causal link forcing h0e4 to happen before $h_2^{e2}$.
+    \item Message $H_0 \rightarrow H_2$ (ts=4) arriving at $H_2$ when its clock is already 5 demonstrates the max rule: $H_2$'s clock becomes max(5, 4) + 1 = 6.
+\end{itemize}
+\vspace{0.5em}
+
+\begin{center}
+\begin{tikzpicture}[>=Stealth, thick, node distance=1.5cm]
+  % Process lines
+  \foreach \i/\proc in {0/$H_0$,1/$H_1$,2/$H_2$} {
+    \node[left] at (0,-\i*2) {\proc};
+    \draw[red] (1,-\i*2) -- (9,-\i*2);
+  }
+
+  % H0 events
+  \node (h0e1) at (2,0)  [draw,circle,inner sep=1pt] {1};
+  \node (h0e2) at (3,0)  [draw,circle,inner sep=1pt] {2};
+  \node (h0e3) at (4,0)  [draw,circle,inner sep=1pt] {3};
+  \node (h0e4) at (5,0)  [draw,circle,inner sep=1pt] {4};
+
+  % H1 receive/update events
+  \node (h1r1) at (4,-2) [draw,circle,inner sep=1pt] {3};
+  \node (h1r2) at (5,-2) [draw,circle,inner sep=1pt] {4};
+  \node (h1r3) at (7,-2) [draw,circle,inner sep=1pt] {6};
+  \node (h1r4) at (8,-2) [draw,circle,inner sep=1pt] {7};
+
+  % H2 events
+  \node (h2e1) at (2,-4) [draw,circle,inner sep=1pt] {1};
+  \node (h2r1) at (6,-4) [draw,circle,inner sep=1pt] {5};
+
+  % Message arrows (labeled with the sent timestamp)
+  \draw[->] (h0e2) -- (h1r1) node[midway, above right] {2};  % H0→H1 (ts=2)
+  \draw[->] (h2e1) -- (h1r2) node[midway, above right] {1};  % H2→H1 (ts=1)
+  \draw[->] (h1r2) -- (h2r1) node[midway, below right] {4};  % H1→H2 (ts=4)
+  \draw[->] (h2r1) -- (h1r3) node[midway, above left]  {5};  % H2→H1 (ts=5)
+  \draw[->] (h0e4) -- (h1r4) node[midway, above right] {4};  % H0→H1 delayed (ts=4)
+\end{tikzpicture}
+\captionof{figure}{Lamport clock updates across distributed hosts $H_0$, $H_1$, and $H_2$}
+  \label{Lamport-clock-across-H0,H1,H2}
+\end{center}
+\textit{Scenario (based on video drawing):}
+\vspace{0.2em}
+
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item \textbf{Initial:} Clocks likely start at 0.
+    \item \textbf{H0 Event:} Local event or send prep. $H_0$ increments clock. Let's say it becomes 1. Another local event, clock becomes 2.
+    \item $\mathbf{H_0}$ $\rightarrow$ $\mathbf{H_1}$: $H_0$ sends message with timestamp 2.
+    \item \textbf{$H_2$ Event:} Local event/send prep. H2 increments clock to 1.
+    \item \textbf{$H_2 \rightarrow H_1$:} $H_2$ sends message with timestamp 1.
+    \item \textbf{$H_1$ Receives $H_0$ msg (ts=2):} $H_1$'s clock was (say) 0. It updates: \( C_1 := \max(0, 2) + 1 = 3 \). Event timestamp is 3.
+    \item \textbf{$H_1$ Receives $H_2$ msg (ts=1):} $H_1$'s clock is now 3. It updates: \( C_1 := \max(3, 1) + 1 = 4 \). Event timestamp is 4. (Note: video shows concurrency differently, but applies rule eventually).
+    \item \textbf{$H_1 \rightarrow H_2$:} H1 sends message with its current timestamp (say, 4 after receiving from $H_2$).
+    \item \textbf{$H_2$ Receives $H_1$ msg (ts=4):} $H_2$'s clock was 1. Updates: \( C_2 := \max(1, 4) + 1 = 5 \). Event timestamp is 5.
+    \item \textbf{$H_2 \rightarrow H_1$:} $H_2$ sends message with timestamp 5.
+    \item \textbf{$H_1$ Receives $H_2$ msg (ts=5):} $H_1$'s clock was 4. Updates: \( C_1 := \max(4, 5) + 1 = 6 \). Event timestamp is 6.
+    \item \textbf{$H_0$ Event:} Local event, clock becomes 3. Local event, clock becomes 4.
+    \item \textbf{$H_0 \rightarrow H_1$ (Delayed):} H0 sends message with timestamp 4.
+    \item \textbf{$H_1$ Receives $H_0$ msg (ts=4):} H1's clock is 6. Updates: \( C_1 := \max(6, 4) + 1 = 7 \). Event timestamp is 7.
+\end{enumerate}
+Each message receipt acts as a rendezvous, potentially pulling the receiver's clock forward based on the sender's progress.
+\end{example}
+
+\subsection{Partial vs. Total Ordering}
+
+\subsubsection{Partial Order via Lamport Clocks}
+Lamport timestamps provide a \textit{partial order}. If event \( A \rightarrow B \), then \( C(A) < C(B) \), where \( C(E) \) is the Lamport timestamp of event E. However, the converse is not true: \( C(A) < C(B) \) does not necessarily imply \( A \rightarrow B \).
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item \textbf{Ordering Related Events:} Events connected by a chain of process steps and messages (causally related) will have correctly ordered timestamps.
+    \item \textbf{Handling Concurrent Events:} If two events A and B are concurrent, their Lamport timestamps \( C(A) \) and \( C(B) \) might be ordered one way (\( C(A) < C(B) \)) or the other (\( C(B) < C(A) \)), or even be equal (if using a simple counter, though less common in full implementations). The timestamp order doesn't reflect a causal relationship between them. For concurrent events, we don't know their "true" order, and Lamport clocks don't impose one beyond the timestamp values themselves. We often don't need to care about the order of unrelated, concurrent events.
+\end{enumerate}
+
+\subsubsection{Achieving Total Order}
+Sometimes, a total order (where every pair of distinct events is ordered) is required, even for concurrent events.
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item \textbf{Requirement:} Needed for algorithms requiring all nodes to process events in the exact same sequence (e.g., replicating state machine operations).
+    \item \textbf{Lamport Clock Extension:} Total order can be achieved by breaking ties between events with the same Lamport timestamp using a static, unique identifier for each process (e.g., process ID). If \( C(A) = C(B) \), the event from the process with the lower ID is considered to happen first. The total order is defined by comparing pairs \( (C(E), \text{ProcessID}_E) \) lexicographically.
+    \item \textbf{Cost:} While this provides a total order, achieving the necessary synchronization (ensuring all nodes eventually see all relevant events to establish this order) often requires significant message passing overhead, potentially involving many rendezvous points or more complex consensus algorithms (like Paxos or Raft). This increases latency and complexity.
+\end{enumerate}
+
+\subsection{Properties and Applications}
+
+\subsubsection{Transitive Property}
+As mentioned in the definition, the happened-before relation (\( \rightarrow \)) is transitive. If \( A \rightarrow B \) and \( B \rightarrow C \), then \( A \rightarrow C \). This mathematical property is crucial for reasoning about distributed systems.
+
+\subsubsection{Proving Correctness of Concurrent Algorithms}
+Logical clocks and the happened-before relation provide a formal framework for reasoning about and proving the correctness of distributed algorithms. By analyzing the causal order of events, one can demonstrate properties like mutual exclusion, state consistency, or deadlock freedom. (Mentioned grad course with Avery Miller for deeper study).
+
+\subsubsection{Representing State and Concurrency}
+Lamport clocks help represent the known state of the system at different points in logical time. They allow identifying which events are causally related and which are concurrent, which is essential for designing fault-tolerant and consistent systems. They capture what a process knows about its own history and the history of other processes it has communicated with.
+
+\subsection{Further Reading}
+\begin{enumerate}[label=\roman*), noitemsep]
+    \item Leslie Lamport's original paper: \texttt{https://lamport.azurewebsites.net/pubs/time-clocks.pdf}
+    \item Rutgers University Notes: \texttt{https://people.cs.rutgers.edu/\~{}pxk/417/notes/logical-clocks.html}
+    \item Princeton University Lecture Notes: \texttt{https://cos316.princeton.edu/lectures/L14-concurrency-time.pdf}
+\end{enumerate}
+
+Notes: 
+no paxos in the final
+\endclass{Week 12}
