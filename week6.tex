@@ -82,7 +82,7 @@ The Document Object Model (DOM) serves as a crucial Application Programming Inte
 
 
 \subsection{Cookies}
-Cookies provide a mechanism for maintaining client-side state in web applications. It is crucial capability where interactions are inherently stateless. Primarily, cookies are employed to remember user-specific information across multiple HTTP requests, enabling functionalities like persistent logins, the storage of user preferences, and, controversially, user tracking for targeted advertising. These small pieces of data are set by the server in the \texttt{Set-Cookie} header of HTTP responses. Once set, the browser automatically and persistently includes these cookies in the headers of all subsequent requests directed to the same domain or its subdomains. Cookies sent by the server can be observed in response headers, such as within a "messages" field which, in the example provided, contained a numerical identifier.  While the presenter will later elaborate on the role of cookies in website performance optimization, it's important to understand that cookies are a cornerstone of client-side state management, enabling personalized and persistent user experiences in distributed web environments despite the underlying stateless nature of the HTTP protocol. \\\\
+Cookies provide a mechanism for maintaining client-side state in web applications. It is crucial capability where interactions are inherently stateless. Primarily, cookies are employed to remember user-specific information across multiple HTTP requests, enabling functionalities like persistent logins, the storage of user preferences, and, controversially, user tracking for targeted advertising. These small pieces of data are set by the server in the \texttt{Set-Cookie} header of HTTP responses. Once set, the browser automatically and persistently includes these cookies in the headers of all subsequent requests directed to the same domain or its subdomains. Cookies sent by the server can be observed in response headers, such as within a "messages" field which, in the example provided, contained a numerical identifier.  While the presenter will later elaborate on the role of cookies in website performance optimization, it's important to understand that cookies are a cornerstone of client-side state management, enabling personalized and persistent user experiences in distributed web environments despite the underlying stateless nature of the HTTP protocol. 
 
 % ---------------- Diagram ---------------------
 %\begin{tikzpicture}[
@@ -106,7 +106,7 @@ Cookies provide a mechanism for maintaining client-side state in web application
 %};
 %\draw[arrow] (webserver) -- node[below, midway] {} (database);% Draw the arrow for cookie ID
 %\end{tikzpicture}
-%\\\\
+
 The web browser send a request cookie that contains the unique ID for the client. The web server accepts this cookie and validated if the userIsLogged in the system. This is done by having a state stored on a database, the information is extracted in $\mathcal{O}(1)$ time. If the stored value for is \texttt{TRUE}, then show the contents of the page. If the stored value is \texttt{FALSE}, then prompt a login page. 
 
 \subsubsection{Cookies and State}

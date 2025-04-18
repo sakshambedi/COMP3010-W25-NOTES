@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{geometry}
+\geometry{margin=1in}
+\title{Distributed Systems Sample Test - CHAT GPT}
+\date{}
+\begin{document}
+\maketitle
+
+\section*{Instructions}
+Answer all questions clearly. Include diagrams when requested.
+
+\section*{Question 1: Consistency and CAP Theorem}
+\begin{enumerate}[label=(\alph*)]
+    \item (2 points) Explain the difference between strong consistency and eventual consistency.
+    \item (2 points) According to the CAP theorem, why is it impossible to guarantee all three CAP properties simultaneously?
+    \item (1 point, True/False) A distributed system prioritizing availability and partition tolerance will always sacrifice strong consistency. \textit{Circle True or False.}
+\end{enumerate}
+
+\section*{Question 2: Peer-to-Peer Networks}
+\begin{enumerate}[label=(\alph*)]
+    \item (2 points) Describe two advantages and two disadvantages of peer-to-peer (P2P) architectures.
+    \item (1 point, Fill in the blank) Distributed Hash Tables (DHT) are used in P2P networks primarily to achieve efficient \underline{\hspace{3cm}}.
+\end{enumerate}
+
+\section*{Question 3: Byzantine Fault Tolerance}
+\begin{enumerate}[label=(\alph*)]
+    \item (2 points) Explain briefly what Byzantine faults are, and why they are challenging to handle.
+    \item (2 points) How does the Byzantine Generals Problem illustrate the challenge of reaching consensus in distributed systems?
+\end{enumerate}
+
+\section*{Question 4: Election Algorithms}
+\begin{enumerate}[label=(\alph*)]
+    \item (2 points) Describe the basic mechanism of the Bully Algorithm.
+    \item (2 points) Provide one key advantage and one key disadvantage of using the Bully Algorithm compared to the Ring Election Algorithm.
+\end{enumerate}
+
+\section*{Question 5: HTTP and Cookies}
+\begin{enumerate}[label=(\alph*)]
+    \item (1 point) Explain what a secure cookie flag does and who sets it.
+    \item (1 point, True/False) Secure cookies ensure that cookies are only transmitted over HTTPS connections. \textit{Circle True or False.}
+\end{enumerate}
+
+\section*{Question 6: Two-Phase Commit (2PC)}
+\begin{enumerate}[label=(\alph*)]
+    \item (2 points) Outline the two main phases of the 2PC protocol.
+    \item (2 points) Describe a scenario where 2PC might lead to a participant blocking indefinitely.
+\end{enumerate}
+
+\newpage
+\section*{Answer Key}
+
+\subsection*{Question 1}
+\begin{enumerate}[label=(\alph*)]
+    \item Strong consistency ensures all clients see the same data immediately after an update. Eventual consistency allows for temporary inconsistencies but ensures data convergence eventually.
+    \item According to CAP theorem, in a network partition scenario, a system must choose between consistency and availability; thus, guaranteeing all three (consistency, availability, and partition tolerance) simultaneously is impossible.
+    \item \textbf{True.}
+\end{enumerate}
+
+\subsection*{Question 2}
+\begin{enumerate}[label=(\alph*)]
+    \item Advantages: Robustness, scalability; Disadvantages: Complexity in management, Security vulnerabilities.
+    \item efficient \textbf{lookup and routing}
+\end{enumerate}
+
+\subsection*{Question 3}
+\begin{enumerate}[label=(\alph*)]
+    \item Byzantine faults involve nodes failing unpredictably or maliciously, presenting incorrect or inconsistent data, challenging consensus protocols.
+    \item The Byzantine Generals Problem illustrates the challenge by showing how faulty nodes can mislead others, making consensus difficult without sufficient redundancy and verification.
+\end{enumerate}
+
+\subsection*{Question 4}
+\begin{enumerate}[label=(\alph*)]
+    \item The Bully Algorithm lets nodes initiate an election by sending messages to higher-ID nodes. If no response, the initiating node declares itself leader.
+    \item Advantage: Simple and clear hierarchy. Disadvantage: High message overhead in large networks.
+\end{enumerate}
+
+\subsection*{Question 5}
+\begin{enumerate}[label=(\alph*)]
+    \item Secure cookies ensure cookies are only sent over secure HTTPS connections. The server sets this flag.
+    \item \textbf{True.}
+\end{enumerate}
+
+\subsection*{Question 6}
+\begin{enumerate}[label=(\alph*)]
+    \item Two phases: (1) Voting (Prepare) phase, (2) Commit or Abort phase.
+    \item If the coordinator crashes after sending a prepare message and before sending commit/abort, participants are left waiting indefinitely (blocked state).
+\end{enumerate}
+
+\end{document}
